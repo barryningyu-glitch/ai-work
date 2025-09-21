@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-Render 部署启动脚本
-确保应用能在 Render 环境中正确启动
+Render 部署启动脚本 - 最小版本
+用于调试部署问题
 """
 import os
 import sys
 import logging
-import traceback
 
 # 设置日志
 logging.basicConfig(level=logging.INFO)
@@ -17,23 +16,18 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def main():
     try:
-        # 从环境变量获取端口，默认为 8000
         port = int(os.environ.get("PORT", 8000))
         
-        logger.info("🚀 启动 Cortex AI Workspace API 服务器...")
+        logger.info("🚀 启动最小化 API 服务器...")
         logger.info(f"📍 端口: {port}")
         logger.info(f"🌍 环境: {os.environ.get('ENVIRONMENT', 'development')}")
-        logger.info(f"🗄️ 数据库: {os.environ.get('DATABASE_URL', 'sqlite:///')[:50]}...")
         
-        # 测试导入主应用
-        logger.info("📦 导入主应用...")
-        from main import app
-        logger.info("✅ 主应用导入成功")
+        # 导入最小化应用
+        from app_minimal import app
+        logger.info("✅ 最小化应用导入成功")
         
-        # 启动 uvicorn 服务器
+        # 启动服务器
         import uvicorn
-        logger.info("🌐 启动 uvicorn 服务器...")
-        
         uvicorn.run(
             app,
             host="0.0.0.0",
@@ -45,6 +39,7 @@ def main():
         
     except Exception as e:
         logger.error(f"❌ 启动失败: {str(e)}")
+        import traceback
         logger.error(f"📋 错误详情: {traceback.format_exc()}")
         sys.exit(1)
 
