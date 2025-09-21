@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科幻登录界面演示</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: radial-gradient(ellipse at center, #0a0a0a 0%, #000000 100%),
+                        linear-gradient(45deg, #001122, #000000, #001122);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sci-fi-login-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Matrix Background Effects */
+        .matrix-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .matrix-rain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(180deg,
+                transparent 0%,
+                rgba(0, 255, 136, 0.03) 50%,
+                transparent 100%);
+            animation: matrixFall 8s linear infinite;
+        }
+
+        .matrix-rain::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, rgba(0, 255, 136, 0.8), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(0, 255, 136, 0.6), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(0, 255, 136, 0.4), transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(0, 255, 136, 0.3), transparent),
+                radial-gradient(2px 2px at 160px 30px, rgba(0, 255, 136, 0.5), transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: matrixRain 3s linear infinite;
+        }
+
+        .hologram-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 255, 136, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridPulse 4s ease-in-out infinite;
+        }
+
+        .energy-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 25% 25%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 136, 0.05) 0%, transparent 50%);
+            animation: energyFlow 6s ease-in-out infinite;
+        }
+
+        /* Main Card */
+        .cyberpunk-card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            background:
+                linear-gradient(135deg, rgba(0, 20, 40, 0.9) 0%, rgba(0, 10, 20, 0.95) 100%);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            z-index: 10;
+            backdrop-filter: blur(20px);
+            box-shadow:
+                0 0 50px rgba(0, 255, 136, 0.2),
+                inset 0 1px 0 rgba(0, 255, 136, 0.1);
+            animation: cardFloat 8s ease-in-out infinite;
+        }
+
+        .card-glow {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ff88, #00ffff, #ff00ff, #00ff88);
+            border-radius: 20px;
+            opacity: 0.3;
+            z-index: -1;
+            animation: glowFade 4s ease-in-out infinite;
+        }
+
+        .card-scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ff88, transparent);
+            animation: scanline 2s ease-in-out infinite;
+        }
+
+        /* Header */
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .neural-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-core {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin-right: 15px;
+        }
+
+        .core-pulse {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: corePulse 2s ease-in-out infinite;
+        }
+
+        .core-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 2px solid rgba(0, 255, 136, 0.5);
+            border-radius: 50%;
+            animation: coreRing 3s ease-in-out infinite;
+        }
+
+        .logo-text-container {
+            text-align: left;
+        }
+
+        .main-logo-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 32px;
+            font-weight: 900;
+            color: #00ff88;
+            letter-spacing: 4px;
+            text-shadow:
+                0 0 10px rgba(0, 255, 136, 0.8),
+                0 0 20px rgba(0, 255, 136, 0.6),
+                0 0 30px rgba(0, 255, 136, 0.4);
+            position: relative;
+        }
+
+        .glitch-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            font-size: 32px;
+            font-weight: 900;
+            color: #ff00ff;
+            letter-spacing: 4px;
+            opacity: 0;
+            animation: glitchAppear 0.5s ease-in-out;
+        }
+
+        .glitch-overlay::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: -2px;
+            color: #00ffff;
+            animation: glitch 0.3s ease-in-out infinite;
+        }
+
+        .glitch-overlay::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 2px;
+            color: #ff00ff;
+            animation: glitch 0.3s ease-in-out infinite reverse;
+        }
+
+        .sub-logo-text {
+            font-size: 12px;
+            color: rgba(0, 255, 136, 0.7);
+            letter-spacing: 6px;
+            font-weight: 400;
+        }
+
+        .access-prompt {
+            margin-top: 20px;
+        }
+
+        .prompt-text {
+            font-size: 14px;
+            color: #00ff88;
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+            animation: promptBlink 2s ease-in-out infinite;
+        }
+
+        .prompt-subtitle {
+            font-size: 10px;
+            color: rgba(0, 255, 136, 0.6);
+            letter-spacing: 1px;
+        }
+
+        /* Form */
+        .cyber-form {
+            margin-bottom: 30px;
+        }
+
+        .input-container {
+            margin-bottom: 25px;
+        }
+
+        .input-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #00ff88;
+            letter-spacing: 2px;
+        }
+
+        .label-icon {
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .cyber-input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(0, 20, 40, 0.8);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 10px;
+            color: #00ff88;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 14px;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .cyber-input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow:
+                0 0 15px rgba(0, 255, 136, 0.5),
+                inset 0 0 10px rgba(0, 255, 136, 0.1);
+            background: rgba(0, 30, 60, 0.9);
+        }
+
+        .cyber-input::placeholder {
+            color: rgba(0, 255, 136, 0.4);
+            font-style: italic;
+        }
+
+        .input-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 10px;
+            background: linear-gradient(45deg, transparent, rgba(0, 255, 136, 0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .cyber-input:focus ~ .input-glow {
+            opacity: 1;
+            animation: inputGlow 2s ease-in-out infinite;
+        }
+
+        /* Button */
+        .neural-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+        }
+
+        .neural-button:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 10px 30px rgba(0, 255, 136, 0.4),
+                0 0 50px rgba(0, 255, 136, 0.2);
+        }
+
+        .button-core {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .button-pulse {
+            width: 8px;
+            height: 8px;
+            background: #000;
+            border-radius: 50%;
+            animation: buttonPulse 1.5s ease-in-out infinite;
+        }
+
+        .button-energy {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .neural-button:hover .button-energy {
+            left: 100%;
+        }
+
+        /* System Status */
+        .system-status {
+            margin-top: 30px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px;
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 6px;
+            font-size: 8px;
+            color: rgba(0, 255, 136, 0.7);
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-item.online {
+            border-color: rgba(0, 255, 136, 0.5);
+            color: #00ff88;
+        }
+
+        .status-pulse {
+            width: 4px;
+            height: 4px;
+            background: #00ff88;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: statusPulse 2s ease-in-out infinite;
+        }
+
+        /* Footer */
+        .terminal-footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .footer-text {
+            font-size: 8px;
+            color: rgba(0, 255, 136, 0.5);
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .footer-line {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.3), transparent);
+            animation: footerScan 3s ease-in-out infinite;
+        }
+
+        /* Animations */
+        @keyframes matrixFall {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        @keyframes matrixRain {
+            0% { transform: translateY(-100px); }
+            100% { transform: translateY(100vh); }
+        }
+
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes energyFlow {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+        }
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
+            50% { transform: translate(-50%, -50%) translateY(-10px); }
+        }
+
+        @keyframes glowFade {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.4; }
+        }
+
+        @keyframes scanline {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes corePulse {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes coreRing {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes glitchAppear {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+
+        @keyframes promptBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes inputGlow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes buttonPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes footerScan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .cyberpunk-card {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+
+            .main-logo-text {
+                font-size: 24px;
+                letter-spacing: 2px;
+            }
+
+            .glitch-overlay {
+                font-size: 24px;
+                letter-spacing: 2px;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .neural-button {
+                font-size: 12px;
+                letter-spacing: 1px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cyberpunk-card {
+                margin: 10px;
+                padding: 25px 15px;
+            }
+
+            .main-logo-text {
+                font-size: 20px;
+            }
+
+            .glitch-overlay {
+                font-size: 20px;
+            }
+
+            .cyber-input {
+                padding: 12px 15px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sci-fi-login-container">
+        <div class="matrix-background">
+            <div class="matrix-rain"></div>
+            <div class="hologram-grid"></div>
+            <div class="energy-particles"></div>
+        </div>
+
+        <div class="cyberpunk-card">
+            <div class="card-glow"></div>
+            <div class="card-scanline"></div>
+
+            <div class="login-header">
+                <div class="neural-logo">
+                    <div class="logo-core">
+                        <div class="core-pulse"></div>
+                        <div class="core-ring"></div>
+                    </div>
+                    <div class="logo-text-container">
+                        <div class="main-logo-text">
+                            CORTEX
+                            <span class="glitch-overlay" id="glitchText" data-text="NEURAL">
+                                NEURAL
+                            </span>
+                        </div>
+                        <div class="sub-logo-text">CONSCIOUSNESS</div>
+                    </div>
+                </div>
+
+                <div class="access-prompt">
+                    <div class="prompt-text">:: ACCESS TERMINAL ::</div>
+                    <div class="prompt-subtitle">Neural Interface Authentication Required</div>
+                </div>
+            </div>
+
+            <form class="cyber-form" onsubmit="handleLogin(event)">
+                <div class="input-container">
+                    <div class="input-label">
+                        <span class="label-icon">⎙</span>
+                        <span>USER_ID</span>
+                    </div>
+                    <div class="input-wrapper">
+                        <input
+                            type="text"
+                            id="username"
+                            class="cyber-input"
+                            placeholder="Enter neural signature..."
+                            required
+                        />
+                        <div class="input-glow"></div>
+                    </div>
+                </div>
+
+                <div class="input-container">
+                    <div class="input-label">
+                        <span class="label-icon">⚿</span>
+                        <span>ACCESS_KEY</span>
+                    </div>
+                    <div class="input-wrapper">
+                        <input
+                            type="password"
+                            id="password"
+                            class="cyber-input"
+                            placeholder="Decrypt access sequence..."
+                            required
+                        />
+                        <div class="input-glow"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="neural-button">
+                    <div class="button-core">
+                        <div class="button-pulse"></div>
+                        <span>INITIALIZE CONNECTION</span>
+                    </div>
+                    <div class="button-energy"></div>
+                </button>
+            </form>
+
+            <div class="system-status">
+                <div class="status-grid">
+                    <div class="status-item online">
+                        <div class="status-pulse"></div>
+                        <span>NEURAL_LINK</span>
+                    </div>
+                    <div class="status-item online">
+                        <div class="status-pulse"></div>
+                        <span>QUANTUM_CORE</span>
+                    </div>
+                    <div class="status-item online">
+                        <div class="status-pulse"></div>
+                        <span>DATA_STREAM</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="terminal-footer">
+                <div class="footer-text">v2.0.87 - Neural Consciousness Platform</div>
+                <div class="footer-line"></div>
+            </div>
+        </div>
+
+        <div class="floating-elements">
+            <div class="float-element" style="--delay: 0s; --duration: 20s;">
+                <div class="element-core"></div>
+            </div>
+            <div class="float-element" style="--delay: 5s; --duration: 25s;">
+                <div class="element-core"></div>
+            </div>
+            <div class="float-element" style="--delay: 10s; --duration: 30s;">
+                <div class="element-core"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Glitch text animation
+        const glitchTexts = ['NEURAL', 'SYNTHETIC', 'QUANTUM', 'DIGITAL'];
+        let glitchIndex = 0;
+
+        function updateGlitchText() {
+            const glitchElement = document.getElementById('glitchText');
+            const newText = glitchTexts[glitchIndex];
+            glitchElement.textContent = newText;
+            glitchElement.setAttribute('data-text', newText);
+            glitchIndex = (glitchIndex + 1) % glitchTexts.length;
+        }
+
+        setInterval(updateGlitchText, 3000);
+
+        // Login handler
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Simulate login process
+            const button = event.target.querySelector('.neural-button');
+            button.disabled = true;
+            button.innerHTML = `
+                <div class="button-core">
+                    <div class="loading-ring"></div>
+                    <span>CONNECTING...</span>
+                </div>
+                <div class="button-energy"></div>
+            `;
+
+            setTimeout(() => {
+                alert(`科幻登录界面演示\n\n用户: ${username}\n状态: 连接成功!\n\n注意：这只是前端演示，实际的登录功能需要后端API支持。`);
+
+                // Reset button
+                button.disabled = false;
+                button.innerHTML = `
+                    <div class="button-core">
+                        <div class="button-pulse"></div>
+                        <span>INITIALIZE CONNECTION</span>
+                    </div>
+                    <div class="button-energy"></div>
+                `;
+            }, 2000);
+        }
+
+        // Add some interactive effects
+        document.addEventListener('mousemove', (e) => {
+            const card = document.querySelector('.cyberpunk-card');
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+
+            const rotateX = (y / rect.height) * 10;
+            const rotateY = (x / rect.width) * 10;
+
+            card.style.transform = `translate(-50%, -50%) perspective(1000px) rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+
+        document.addEventListener('mouseleave', () => {
+            const card = document.querySelector('.cyberpunk-card');
+            card.style.transform = 'translate(-50%, -50%) perspective(1000px) rotateX(0) rotateY(0)';
+        });
+    </script>
+</body>
+</html>

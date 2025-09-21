@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import LoginPage from './components/Auth/LoginPage';
+import SciFiLoginPage from './components/Auth/SciFiLoginPage';
 import UserManagement from './components/Admin/UserManagement';
 
 // 导入各个模块组件
@@ -19,6 +20,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [useSciFiLogin, setUseSciFiLogin] = useState(true); // 默认使用科幻登录界面
 
   useEffect(() => {
     // 检查本地存储的token
@@ -103,7 +105,9 @@ function App() {
   }
 
   if (!isAuthenticated) {
-    return <LoginPage onLogin={handleLogin} />;
+    return useSciFiLogin ?
+      <SciFiLoginPage onLogin={handleLogin} /> :
+      <LoginPage onLogin={handleLogin} />;
   }
 
   const renderCurrentPage = () => {
