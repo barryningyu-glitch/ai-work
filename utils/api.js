@@ -1,6 +1,6 @@
 // API 工具函数
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://ai-work-3fth.onrender.com/api'
+  ? 'https://ai-work-6.onrender.com/api'
   : 'http://localhost:8002/api';
 
 // 获取认证token
