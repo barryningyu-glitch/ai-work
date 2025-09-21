@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 
-const MessageList = ({ messages, isLoading, onCopyMessage, onRegenerateResponse }) => {
+const MessageList = ({ messages, isLoading, onCopyMessage, onRegenerateResponse, isMobile = false }) => {
   const [copiedMessageId, setCopiedMessageId] = useState(null)
   const [likedMessages, setLikedMessages] = useState(new Set())
   const [dislikedMessages, setDislikedMessages] = useState(new Set())
@@ -224,19 +224,19 @@ const MessageList = ({ messages, isLoading, onCopyMessage, onRegenerateResponse 
   return (
     <div className="flex-1 overflow-y-auto">
       {messages.length === 0 ? (
-        <div className="flex items-center justify-center h-full text-center">
+        <div className="flex items-center justify-center h-full text-center p-4">
           <div>
-            <Bot className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <h3 className="text-lg font-medium mb-2">开始新的对话</h3>
-            <p className="text-muted-foreground max-w-md">
+            <Bot className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} mx-auto mb-4 text-muted-foreground opacity-50`} />
+            <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-medium mb-2`}>开始新的对话</h3>
+            <p className={`text-muted-foreground max-w-md ${isMobile ? 'text-sm' : ''}`}>
               我是你的AI助手，可以帮助你解答问题、分析问题、提供建议。
               有什么我可以帮助你的吗？
             </p>
             
             {/* 建议问题 */}
-            <div className="mt-6 space-y-2">
-              <p className="text-sm text-muted-foreground">你可以尝试问我：</p>
-              <div className="flex flex-wrap gap-2 justify-center">
+            <div className="mt-4 lg:mt-6 space-y-2">
+              <p className="text-xs lg:text-sm text-muted-foreground">你可以尝试问我：</p>
+              <div className={`flex flex-wrap gap-2 justify-center ${isMobile ? 'max-w-xs mx-auto' : ''}`}>
                 {[
                   '如何提高工作效率？',
                   '解释一下React Hooks',
@@ -245,10 +245,12 @@ const MessageList = ({ messages, isLoading, onCopyMessage, onRegenerateResponse 
                 ].map((suggestion, index) => (
                   <button
                     key={index}
-                    className="px-3 py-1 bg-muted hover:bg-accent rounded-full text-xs transition-colors"
+                    className={`px-2 lg:px-3 py-1 bg-muted hover:bg-accent rounded-full text-xs transition-colors ${
+                      isMobile ? 'text-xs' : ''
+                    }`}
                     onClick={() => {
                       // 这里可以触发发送建议问题的逻辑
-                      console.log('发送建议问题:', suggestion)
+                      console.log('建议问题:', suggestion)
                     }}
                   >
                     {suggestion}
@@ -259,30 +261,156 @@ const MessageList = ({ messages, isLoading, onCopyMessage, onRegenerateResponse 
           </div>
         </div>
       ) : (
-        <div className="group">
+        <div className={`space-y-4 lg:space-y-6 ${isMobile ? 'p-3' : 'p-6'}`}>
           {messages.map((message, index) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isLast={index === messages.length - 1}
-            />
+            <div
+              key={message.id || index}
+              className={`flex gap-3 lg:gap-4 ${
+                message.role === 'user' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              {/* AI头像 */}
+              {message.role === 'assistant' && (
+                <div className={`flex-shrink-0 ${isMobile ? 'w-7 h-7' : 'w-8 h-8'} rounded-full bg-primary/20 flex items-center justify-center`}>
+                  <Bot className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-primary`} />
+                </div>
+              )}
+
+              {/* 消息内容 */}
+              <div className={`flex-1 ${message.role === 'user' ? 'max-w-[80%]' : 'max-w-[85%]'} ${isMobile ? 'max-w-[90%]' : ''}`}>
+                <div
+                  className={`
+                    ${isMobile ? 'p-3 text-sm' : 'p-4'} rounded-lg
+                    ${message.role === 'user'
+                      ? 'bg-primary text-primary-foreground ml-auto'
+                      : 'bg-muted'
+                    }
+                  `}
+                >
+                  {/* 消息内容渲染 */}
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    {renderMarkdown(message.content)}
+                  </div>
+
+                  {/* 时间戳 */}
+                  <div className={`${isMobile ? 'text-xs mt-2' : 'text-xs mt-3'} opacity-70`}>
+                    {formatTime(message.timestamp)}
+                  </div>
+                </div>
+
+                {/* AI消息操作按钮 */}
+                {message.role === 'assistant' && (
+                  <div className={`flex items-center gap-1 lg:gap-2 ${isMobile ? 'mt-2' : 'mt-3'}`}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleCopy(message.id, message.content)}
+                      className={`${isMobile ? 'h-7 px-2' : 'h-8 px-3'} text-xs`}
+                    >
+                      <Copy className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                      {copiedMessageId === message.id ? '已复制' : '复制'}
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onRegenerateResponse(message.id)}
+                      className={`${isMobile ? 'h-7 px-2' : 'h-8 px-3'} text-xs`}
+                    >
+                      <RefreshCw className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                      重新生成
+                    </Button>
+
+                    {!isMobile && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleLike(message.id)}
+                          className={`h-8 px-3 text-xs ${
+                            likedMessages.has(message.id) ? 'text-green-600' : ''
+                          }`}
+                        >
+                          <ThumbsUp className="w-4 h-4 mr-1" />
+                          好评
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDislike(message.id)}
+                          className={`h-8 px-3 text-xs ${
+                            dislikedMessages.has(message.id) ? 'text-red-600' : ''
+                          }`}
+                        >
+                          <ThumbsDown className="w-4 h-4 mr-1" />
+                          差评
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleShare(message)}
+                          className="h-8 px-3 text-xs"
+                        >
+                          <Share className="w-4 h-4 mr-1" />
+                          分享
+                        </Button>
+                      </>
+                    )}
+
+                    {isMobile && (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleLike(message.id)}
+                          className={`h-7 w-7 p-0 ${
+                            likedMessages.has(message.id) ? 'text-green-600' : ''
+                          }`}
+                        >
+                          <ThumbsUp className="w-3 h-3" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDislike(message.id)}
+                          className={`h-7 w-7 p-0 ${
+                            dislikedMessages.has(message.id) ? 'text-red-600' : ''
+                          }`}
+                        >
+                          <ThumbsDown className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 用户头像 */}
+              {message.role === 'user' && (
+                <div className={`flex-shrink-0 ${isMobile ? 'w-7 h-7' : 'w-8 h-8'} rounded-full bg-primary flex items-center justify-center`}>
+                  <User className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-primary-foreground`} />
+                </div>
+              )}
+            </div>
           ))}
 
           {/* 加载状态 */}
           {isLoading && (
-            <div className="flex gap-4 p-4">
-              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4" />
+            <div className="flex gap-3 lg:gap-4 justify-start">
+              <div className={`flex-shrink-0 ${isMobile ? 'w-7 h-7' : 'w-8 h-8'} rounded-full bg-primary/20 flex items-center justify-center`}>
+                <Bot className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-primary`} />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="font-medium text-sm">AI助手</span>
-                  <span className="text-xs text-muted-foreground">正在思考...</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className={`${isMobile ? 'p-3' : 'p-4'} bg-muted rounded-lg`}>
+                <div className="flex items-center gap-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                  <span className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>AI正在思考...</span>
                 </div>
               </div>
             </div>
@@ -291,11 +419,11 @@ const MessageList = ({ messages, isLoading, onCopyMessage, onRegenerateResponse 
       )}
 
       {/* 分享模态框 */}
-      {showShareModal && shareMessage && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="eva-panel p-6 max-w-md w-full mx-4">
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={`eva-panel ${isMobile ? 'p-4 max-w-sm' : 'p-6 max-w-md'} w-full`}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">分享消息</h3>
+              <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>分享消息</h3>
               <Button
                 variant="ghost"
                 size="sm"
@@ -305,42 +433,27 @@ const MessageList = ({ messages, isLoading, onCopyMessage, onRegenerateResponse 
               </Button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">消息内容预览</label>
-                <div className="p-3 bg-muted rounded-lg max-h-32 overflow-y-auto text-sm">
-                  {shareMessage.content.length > 200 
-                    ? shareMessage.content.substring(0, 200) + '...'
-                    : shareMessage.content
-                  }
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
+            <div className={`${isMobile ? 'text-sm' : ''} mb-4`}>
+              <p className="text-muted-foreground mb-2">选择分享方式：</p>
+              <div className="space-y-2">
                 <Button
-                  variant="outline"
                   onClick={shareToClipboard}
-                  className="w-full"
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  复制文本
-                </Button>
-                <Button
+                  className="w-full justify-start"
                   variant="outline"
-                  onClick={() => {
-                    // 这里可以添加其他分享方式
-                    console.log('分享到其他平台')
-                  }}
-                  className="w-full"
+                  size={isMobile ? "sm" : "default"}
                 >
-                  <Share className="w-4 h-4 mr-2" />
-                  其他方式
+                  <Copy className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-2`} />
+                  复制到剪贴板
                 </Button>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={() => setShowShareModal(false)}>
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowShareModal(false)}
+                size={isMobile ? "sm" : "default"}
+              >
                 取消
               </Button>
             </div>

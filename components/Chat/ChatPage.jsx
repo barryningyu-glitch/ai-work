@@ -14,7 +14,9 @@ import {
   RefreshCw,
   Download,
   Search,
-  Filter
+  Filter,
+  Menu,
+  X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
@@ -37,6 +39,10 @@ const ChatPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [showSettings, setShowSettings] = useState(false)
   const messagesEndRef = useRef(null)
+
+  // 移动端状态管理
+  const [isMobileView, setIsMobileView] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   // 获取可用模型
   const fetchAvailableModels = async () => {
@@ -302,49 +308,106 @@ const ChatPage = () => {
     console.log('重新生成响应:', messageId)
   }
 
+  // 检测屏幕尺寸
+  useEffect(() => {
+    const checkMobileView = () => {
+      const isMobile = window.innerWidth < 1024
+      setIsMobileView(isMobile)
+      // 在移动端默认隐藏侧边栏
+      if (isMobile) {
+        setShowSidebar(false)
+      } else {
+        setShowSidebar(true)
+      }
+    }
+    
+    checkMobileView()
+    window.addEventListener('resize', checkMobileView)
+    return () => window.removeEventListener('resize', checkMobileView)
+  }, [])
+
+  // 移动端侧边栏切换
+  const toggleMobileSidebar = () => {
+    if (isMobileView) {
+      setMobileSidebarOpen(!mobileSidebarOpen)
+    } else {
+      setShowSidebar(!showSidebar)
+    }
+  }
+
+  // 移动端选择会话后关闭侧边栏
+  const handleMobileSessionChange = (session) => {
+    handleSessionChange(session)
+    if (isMobileView) {
+      setMobileSidebarOpen(false)
+    }
+  }
+
   return (
-    <div className="h-[calc(100vh-4rem)] flex">
-      {/* 侧边栏 */}
-      {showSidebar && (
-        <ChatSidebar
-          sessions={sessions}
-          currentSession={currentSession}
-          onSessionChange={handleSessionChange}
-          onNewSession={handleNewSession}
-          onDeleteSession={handleDeleteSession}
-          onRenameSession={handleRenameSession}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+    <div className="h-[calc(100vh-4rem)] flex relative">
+      {/* 移动端遮罩层 */}
+      {isMobileView && mobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
         />
       )}
 
+      {/* 侧边栏 */}
+      {(showSidebar || (isMobileView && mobileSidebarOpen)) && (
+        <div className={`${
+          isMobileView 
+            ? 'fixed top-16 left-0 bottom-0 w-80 z-50 transform transition-transform duration-300 ease-in-out' 
+            : 'relative'
+        }`}>
+          <ChatSidebar
+            sessions={sessions}
+            currentSession={currentSession}
+            onSessionChange={isMobileView ? handleMobileSessionChange : handleSessionChange}
+            onNewSession={handleNewSession}
+            onDeleteSession={handleDeleteSession}
+            onRenameSession={handleRenameSession}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            isMobile={isMobileView}
+            onClose={() => setMobileSidebarOpen(false)}
+          />
+        </div>
+      )}
+
       {/* 主对话区域 */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* 顶部工具栏 */}
-        <div className="eva-panel p-4 border-b border-border">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="eva-panel p-3 lg:p-4 border-b border-border">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 lg:gap-4 min-w-0">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowSidebar(!showSidebar)}
+                onClick={toggleMobileSidebar}
+                className="flex-shrink-0"
               >
-                <MessageSquare className="w-4 h-4" />
+                {isMobileView ? (
+                  mobileSidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />
+                ) : (
+                  <MessageSquare className="w-4 h-4" />
+                )}
               </Button>
               
-              <div>
-                <h2 className="font-semibold text-lg">
+              <div className="min-w-0">
+                <h2 className="font-semibold text-sm lg:text-lg truncate">
                   {currentSession?.title || 'AI对话助手'}
                 </h2>
-                <p className="text-sm text-muted-foreground">
-                  {currentSession?.message_count || 0} 条消息 · 模型: {currentSession?.model || aiModel}
+                <p className="text-xs lg:text-sm text-muted-foreground truncate">
+                  <span className="hidden sm:inline">{currentSession?.message_count || 0} 条消息 · </span>
+                  模型: {currentSession?.model || aiModel}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 lg:gap-2 flex-shrink-0">
               <Select value={aiModel} onValueChange={setAiModel}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-24 lg:w-40 text-xs lg:text-sm">
                   <SelectValue 
                     placeholder="选择模型"
                     selectedValue={availableModels.find(m => m.id === aiModel)?.name || aiModel}
@@ -363,9 +426,19 @@ const ChatPage = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowQuickCommands(!showQuickCommands)}
+                className="hidden sm:flex text-xs lg:text-sm"
               >
-                <Zap className="w-4 h-4 mr-2" />
-                快捷指令
+                <Zap className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                <span className="hidden lg:inline">快捷指令</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowQuickCommands(!showQuickCommands)}
+                className="sm:hidden"
+              >
+                <Zap className="w-4 h-4" />
               </Button>
 
               <Button 
@@ -373,7 +446,7 @@ const ChatPage = () => {
                 size="sm"
                 onClick={() => setShowSettings(true)}
               >
-                <Settings className="w-4 h-4" />
+                <Settings className="w-3 h-3 lg:w-4 lg:h-4" />
               </Button>
             </div>
           </div>
@@ -386,6 +459,7 @@ const ChatPage = () => {
             isLoading={isLoading}
             onCopyMessage={handleCopyMessage}
             onRegenerateResponse={handleRegenerateResponse}
+            isMobile={isMobileView}
           />
           <div ref={messagesEndRef} />
 
@@ -394,16 +468,17 @@ const ChatPage = () => {
             <QuickCommands
               onCommandSelect={handleQuickCommand}
               onClose={() => setShowQuickCommands(false)}
+              isMobile={isMobileView}
             />
           )}
         </div>
 
         {/* 输入区域 */}
-        <div className="eva-panel p-4 border-t border-border">
-          <div className="flex gap-3">
+        <div className="eva-panel p-3 lg:p-4 border-t border-border">
+          <div className="flex gap-2 lg:gap-3">
             <div className="flex-1 relative">
               <Textarea
-                placeholder="输入你的问题... (Shift+Enter 换行，Enter 发送)"
+                placeholder={isMobileView ? "输入问题..." : "输入你的问题... (Shift+Enter 换行，Enter 发送)"}
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={(e) => {
@@ -412,26 +487,27 @@ const ChatPage = () => {
                     handleSendMessage()
                   }
                 }}
-                className="eva-input resize-none min-h-[60px] max-h-[200px] pr-12"
+                className="eva-input resize-none min-h-[50px] lg:min-h-[60px] max-h-[150px] lg:max-h-[200px] pr-10 lg:pr-12 text-sm lg:text-base"
                 disabled={isLoading}
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={!inputMessage.trim() || isLoading}
-                className="absolute right-2 bottom-2 eva-button"
+                className="absolute right-1 lg:right-2 bottom-1 lg:bottom-2 eva-button"
                 size="sm"
               >
                 {isLoading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="w-3 h-3 lg:w-4 lg:h-4 animate-spin" />
                 ) : (
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3 h-3 lg:w-4 lg:h-4" />
                 )}
               </Button>
             </div>
           </div>
           
           <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-            <span>AI助手会尽力帮助你，但请注意验证重要信息</span>
+            <span className="hidden sm:inline">AI助手会尽力帮助你，但请注意验证重要信息</span>
+            <span className="sm:hidden">请验证重要信息</span>
             <span>{inputMessage.length}/2000</span>
           </div>
         </div>
@@ -439,16 +515,16 @@ const ChatPage = () => {
 
       {/* 设置模态框 */}
       {showSettings && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="eva-panel p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="eva-panel p-4 lg:p-6 max-w-md w-full">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">聊天设置</h3>
+              <h3 className="text-base lg:text-lg font-semibold">聊天设置</h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowSettings(false)}
               >
-                ×
+                <X className="w-4 h-4" />
               </Button>
             </div>
 
@@ -472,15 +548,15 @@ const ChatPage = () => {
               <div>
                 <label className="block text-sm font-medium mb-2">消息显示设置</label>
                 <div className="space-y-2">
-                  <label className="flex items-center">
+                  <label className="flex items-center text-sm">
                     <input type="checkbox" className="mr-2" defaultChecked />
                     显示时间戳
                   </label>
-                  <label className="flex items-center">
+                  <label className="flex items-center text-sm">
                     <input type="checkbox" className="mr-2" defaultChecked />
                     显示消息操作按钮
                   </label>
-                  <label className="flex items-center">
+                  <label className="flex items-center text-sm">
                     <input type="checkbox" className="mr-2" />
                     自动滚动到最新消息
                   </label>
@@ -489,19 +565,19 @@ const ChatPage = () => {
 
               <div>
                 <label className="block text-sm font-medium mb-2">快捷键设置</label>
-                <div className="text-sm text-muted-foreground space-y-1">
+                <div className="text-xs lg:text-sm text-muted-foreground space-y-1">
                   <div>Enter: 发送消息</div>
                   <div>Shift + Enter: 换行</div>
-                  <div>Ctrl + /: 显示快捷指令</div>
+                  <div className="hidden lg:block">Ctrl + /: 显示快捷指令</div>
                 </div>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={() => setShowSettings(false)}>
+              <Button variant="outline" onClick={() => setShowSettings(false)} size="sm">
                 取消
               </Button>
-              <Button onClick={() => setShowSettings(false)}>
+              <Button onClick={() => setShowSettings(false)} size="sm">
                 保存设置
               </Button>
             </div>

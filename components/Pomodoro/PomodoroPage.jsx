@@ -32,6 +32,9 @@ const PomodoroPage = () => {
   const [currentSession, setCurrentSession] = useState(1)
   const [completedSessions, setCompletedSessions] = useState(0)
   
+  // 移动端状态
+  const [isMobileView, setIsMobileView] = useState(false)
+  
   // 设置
   const [settings, setSettings] = useState({
     workDuration: 25,
@@ -62,6 +65,17 @@ const PomodoroPage = () => {
   
   const intervalRef = useRef(null)
   const audioRef = useRef(null)
+
+  // 检测移动端
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // 模式配置
   const modes = {
@@ -271,243 +285,456 @@ const PomodoroPage = () => {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-accent/10 blur-2xl"></div>
       </div>
 
-      <div className="relative z-10 p-6">
+      <div className={`relative z-10 ${isMobileView ? 'p-4' : 'p-6'}`}>
         {/* 顶部工具栏 */}
-        <div className="flex items-center justify-between mb-8">
+        <div className={`flex items-center justify-between ${isMobileView ? 'mb-4' : 'mb-8'}`}>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Clock className="w-6 h-6 text-primary" />
-              <h1 className="text-2xl font-bold text-primary">专注番茄钟</h1>
+              <Clock className={`${isMobileView ? 'w-5 h-5' : 'w-6 h-6'} text-primary`} />
+              <h1 className={`${isMobileView ? 'text-lg' : 'text-2xl'} font-bold text-primary`}>
+                {isMobileView ? '番茄钟' : '专注番茄钟'}
+              </h1>
             </div>
             
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Target className="w-4 h-4" />
-              <span>第 {currentSession} 轮</span>
-              <span>·</span>
-              <span>已完成 {completedSessions} 个番茄</span>
-            </div>
+            {!isMobileView && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Target className="w-4 h-4" />
+                <span>第 {currentSession} 轮</span>
+                <span>·</span>
+                <span>已完成 {completedSessions} 个番茄</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
             <Button
               className="eva-button"
-              size="sm"
+              size={isMobileView ? "sm" : "sm"}
               onClick={() => setShowThemeSelector(true)}
             >
               <Palette className="w-4 h-4 mr-2" />
-              主题
+              {!isMobileView && '主题'}
             </Button>
             
             <Button
               className="eva-button"
-              size="sm"
+              size={isMobileView ? "sm" : "sm"}
               onClick={() => setShowStats(true)}
             >
               <BarChart3 className="w-4 h-4 mr-2" />
-              统计
+              {!isMobileView && '统计'}
             </Button>
             
             <Button
               className="eva-button"
-              size="sm"
+              size={isMobileView ? "sm" : "sm"}
               onClick={() => setShowSettings(true)}
             >
               <Settings className="w-4 h-4 mr-2" />
-              设置
+              {!isMobileView && '设置'}
             </Button>
           </div>
         </div>
 
+        {/* 移动端状态信息 */}
+        {isMobileView && (
+          <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground mb-4">
+            <div className="flex items-center gap-1">
+              <Target className="w-3 h-3" />
+              <span>第 {currentSession} 轮</span>
+            </div>
+            <span>·</span>
+            <span>已完成 {completedSessions} 个</span>
+          </div>
+        )}
+
         {/* 主要内容区域 */}
         <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* 左侧：模式选择 */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg mb-4 text-primary">选择模式</h3>
-              {Object.entries(modes).map(([key, mode]) => {
-                const Icon = mode.icon
-                return (
-                  <button
-                    key={key}
-                    onClick={() => handleModeChange(key)}
-                    className={`
-                      w-full p-4 rounded-lg border transition-all
-                      ${currentMode === key 
-                        ? `${mode.bgColor} border-primary/50 shadow-lg` 
-                        : 'eva-panel hover:bg-accent/50'
-                      }
-                    `}
+          {isMobileView ? (
+            // 移动端布局：垂直堆叠
+            <div className="space-y-6">
+              {/* 计时器显示 */}
+              <div className="flex flex-col items-center justify-center">
+                <TimerDisplay
+                   timeLeft={timeLeft}
+                   progress={getProgress()}
+                   mode={currentMode}
+                   theme={currentTheme}
+                   isRunning={isRunning}
+                   isMobile={isMobileView}
+                 />
+
+                {/* 控制按钮 */}
+                <div className="flex items-center gap-4 mt-6">
+                  <Button
+                    onClick={handlePlayPause}
+                    size="lg"
+                    className="eva-button w-14 h-14 rounded-full"
                   >
-                    <div className="flex items-center gap-3">
-                      <Icon className={`w-6 h-6 ${currentMode === key ? mode.color : 'text-muted-foreground'}`} />
-                      <div className="text-left">
-                        <div className="font-medium text-white">{mode.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {mode.duration} 分钟
+                    {isRunning ? (
+                      <Pause className="w-5 h-5" />
+                    ) : (
+                      <Play className="w-5 h-5 ml-1" />
+                    )}
+                  </Button>
+                  
+                  <Button
+                    onClick={handleStop}
+                    size="lg"
+                    className="eva-button w-10 h-10 rounded-full"
+                  >
+                    <Square className="w-4 h-4" />
+                  </Button>
+                  
+                  <Button
+                    onClick={handleReset}
+                    size="lg"
+                    className="eva-button w-10 h-10 rounded-full"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* 模式描述 */}
+                <div className="text-center mt-4">
+                  <h2 className={`text-lg font-semibold ${currentModeConfig.color} mb-1`}>
+                    {currentModeConfig.name}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {currentModeConfig.description}
+                  </p>
+                </div>
+              </div>
+
+              {/* 模式选择 */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-base mb-3 text-primary">选择模式</h3>
+                {Object.entries(modes).map(([key, mode]) => {
+                  const Icon = mode.icon
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleModeChange(key)}
+                      className={`
+                        w-full p-3 rounded-lg border transition-all
+                        ${currentMode === key 
+                          ? `${mode.bgColor} border-primary/50 shadow-lg` 
+                          : 'eva-panel hover:bg-accent/50'
+                        }
+                      `}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className={`w-5 h-5 ${currentMode === key ? mode.color : 'text-muted-foreground'}`} />
+                        <div className="text-left">
+                          <div className="font-medium text-white text-sm">{mode.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {mode.duration} 分钟
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </button>
-                )
-              })}
+                    </button>
+                  )
+                })}
+              </div>
 
               {/* 今日统计 */}
-              <div className="eva-panel p-4 mt-6">
-                <h4 className="font-medium mb-3 flex items-center gap-2">
+              <div className="eva-panel p-4">
+                <h4 className="font-medium mb-3 flex items-center gap-2 text-sm">
                   <CheckCircle2 className="w-4 h-4 text-primary" />
                   今日成果
                 </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-white">完成番茄:</span>
-                    <span className="text-primary font-medium">{todayStats.completedSessions}</span>
+                <div className="grid grid-cols-3 gap-4 text-xs">
+                  <div className="text-center">
+                    <div className="text-primary font-medium text-lg">{todayStats.completedSessions}</div>
+                    <div className="text-muted-foreground">完成番茄</div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white">专注时长:</span>
-                    <span className="text-primary font-medium">{todayStats.totalFocusTime}分钟</span>
+                  <div className="text-center">
+                    <div className="text-primary font-medium text-lg">{todayStats.totalFocusTime}</div>
+                    <div className="text-muted-foreground">专注分钟</div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white">当前连击:</span>
-                    <span className="text-primary font-medium">{todayStats.currentStreak}</span>
+                  <div className="text-center">
+                    <div className="text-primary font-medium text-lg">{todayStats.currentStreak}</div>
+                    <div className="text-muted-foreground">当前连击</div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* 中间：计时器显示 */}
-            <div className="flex flex-col items-center justify-center">
-              <TimerDisplay
-                timeLeft={timeLeft}
-                progress={getProgress()}
-                mode={currentMode}
-                theme={currentTheme}
-                isRunning={isRunning}
-              />
-
-              {/* 控制按钮 */}
-              <div className="flex items-center gap-4 mt-8">
-                <Button
-                  onClick={handlePlayPause}
-                  size="lg"
-                  className="eva-button w-16 h-16 rounded-full"
-                >
-                  {isRunning ? (
-                    <Pause className="w-6 h-6" />
-                  ) : (
-                    <Play className="w-6 h-6 ml-1" />
+              {/* 快捷操作 */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-base mb-3 text-primary">快捷操作</h3>
+                
+                {/* 音量控制 */}
+                <div className="eva-panel p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-white text-sm">提示音</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSettings(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }))}
+                    >
+                      {settings.soundEnabled ? (
+                        <Volume2 className="w-4 h-4" />
+                      ) : (
+                        <VolumeX className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {settings.soundEnabled && (
+                    <Slider
+                      value={[settings.soundVolume]}
+                      onValueChange={([value]) => setSettings(prev => ({ ...prev, soundVolume: value }))}
+                      max={100}
+                      step={10}
+                      className="w-full"
+                    />
                   )}
-                </Button>
-                
-                <Button
-                  onClick={handleStop}
-                  size="lg"
-                  className="eva-button w-12 h-12 rounded-full"
-                >
-                  <Square className="w-5 h-5" />
-                </Button>
-                
-                <Button
-                  onClick={handleReset}
-                  size="lg"
-                  className="eva-button w-12 h-12 rounded-full"
-                >
-                  <RotateCcw className="w-5 h-5" />
-                </Button>
-              </div>
+                </div>
 
-              {/* 模式描述 */}
-              <div className="text-center mt-6">
-                <h2 className={`text-xl font-semibold ${currentModeConfig.color} mb-2`}>
-                  {currentModeConfig.name}
-                </h2>
-                <p className="text-muted-foreground">
-                  {currentModeConfig.description}
-                </p>
+                {/* 快速设置 */}
+                <div className="eva-panel p-3">
+                  <h4 className="font-medium mb-2 text-white text-sm">快速设置</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-white">自动开始休息</span>
+                      <Button
+                        variant={settings.autoStartBreaks ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSettings(prev => ({ ...prev, autoStartBreaks: !prev.autoStartBreaks }))}
+                        className="text-xs px-2 py-1 h-6"
+                      >
+                        {settings.autoStartBreaks ? '开启' : '关闭'}
+                      </Button>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-white">自动开始工作</span>
+                      <Button
+                        variant={settings.autoStartWork ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSettings(prev => ({ ...prev, autoStartWork: !prev.autoStartWork }))}
+                        className="text-xs px-2 py-1 h-6"
+                      >
+                        {settings.autoStartWork ? '开启' : '关闭'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 进度指示器 */}
+                <div className="eva-panel p-3">
+                  <h4 className="font-medium mb-2 text-white text-sm">本轮进度</h4>
+                  <div className="flex items-center gap-2 justify-center">
+                    {Array.from({ length: settings.sessionsUntilLongBreak }, (_, i) => (
+                      <div
+                        key={i}
+                        className={`
+                          w-3 h-3 rounded-full
+                          ${i < completedSessions % settings.sessionsUntilLongBreak
+                            ? 'bg-primary' 
+                            : 'bg-muted'
+                          }
+                        `}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    {settings.sessionsUntilLongBreak - (completedSessions % settings.sessionsUntilLongBreak)} 个番茄后长休息
+                  </p>
+                </div>
               </div>
             </div>
-
-            {/* 右侧：快捷操作和信息 */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg mb-4 text-primary">快捷操作</h3>
-              
-              {/* 音量控制 */}
-              <div className="eva-panel p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-medium text-white">提示音</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSettings(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }))}
-                  >
-                    {settings.soundEnabled ? (
-                      <Volume2 className="w-4 h-4" />
-                    ) : (
-                      <VolumeX className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-                {settings.soundEnabled && (
-                  <Slider
-                    value={[settings.soundVolume]}
-                    onValueChange={([value]) => setSettings(prev => ({ ...prev, soundVolume: value }))}
-                    max={100}
-                    step={10}
-                    className="w-full"
-                  />
-                )}
-              </div>
-
-              {/* 快速设置 */}
-              <div className="eva-panel p-4">
-                <h4 className="font-medium mb-3 text-white">快速设置</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-white">自动开始休息</span>
-                    <Button
-                      variant={settings.autoStartBreaks ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSettings(prev => ({ ...prev, autoStartBreaks: !prev.autoStartBreaks }))}
-                    >
-                      {settings.autoStartBreaks ? '开启' : '关闭'}
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-white">自动开始工作</span>
-                    <Button
-                      variant={settings.autoStartWork ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSettings(prev => ({ ...prev, autoStartWork: !prev.autoStartWork }))}
-                    >
-                      {settings.autoStartWork ? '开启' : '关闭'}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* 进度指示器 */}
-              <div className="eva-panel p-4">
-                <h4 className="font-medium mb-3 text-white">本轮进度</h4>
-                <div className="flex items-center gap-2">
-                  {Array.from({ length: settings.sessionsUntilLongBreak }, (_, i) => (
-                    <div
-                      key={i}
+          ) : (
+            // 桌面端布局：三列网格
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* 左侧：模式选择 */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg mb-4 text-primary">选择模式</h3>
+                {Object.entries(modes).map(([key, mode]) => {
+                  const Icon = mode.icon
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleModeChange(key)}
                       className={`
-                        w-3 h-3 rounded-full
-                        ${i < completedSessions % settings.sessionsUntilLongBreak
-                          ? 'bg-primary' 
-                          : 'bg-muted'
+                        w-full p-4 rounded-lg border transition-all
+                        ${currentMode === key 
+                          ? `${mode.bgColor} border-primary/50 shadow-lg` 
+                          : 'eva-panel hover:bg-accent/50'
                         }
                       `}
-                    />
-                  ))}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className={`w-6 h-6 ${currentMode === key ? mode.color : 'text-muted-foreground'}`} />
+                        <div className="text-left">
+                          <div className="font-medium text-white">{mode.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {mode.duration} 分钟
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+
+                {/* 今日统计 */}
+                <div className="eva-panel p-4 mt-6">
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary" />
+                    今日成果
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-white">完成番茄:</span>
+                      <span className="text-primary font-medium">{todayStats.completedSessions}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white">专注时长:</span>
+                      <span className="text-primary font-medium">{todayStats.totalFocusTime}分钟</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white">当前连击:</span>
+                      <span className="text-primary font-medium">{todayStats.currentStreak}</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {settings.sessionsUntilLongBreak - (completedSessions % settings.sessionsUntilLongBreak)} 个番茄后长休息
-                </p>
+              </div>
+
+              {/* 中间：计时器显示 */}
+              <div className="flex flex-col items-center justify-center">
+                 <TimerDisplay
+                   timeLeft={timeLeft}
+                   progress={getProgress()}
+                   mode={currentMode}
+                   theme={currentTheme}
+                   isRunning={isRunning}
+                   isMobile={isMobileView}
+                 />
+
+                {/* 控制按钮 */}
+                <div className="flex items-center gap-4 mt-8">
+                  <Button
+                    onClick={handlePlayPause}
+                    size="lg"
+                    className="eva-button w-16 h-16 rounded-full"
+                  >
+                    {isRunning ? (
+                      <Pause className="w-6 h-6" />
+                    ) : (
+                      <Play className="w-6 h-6 ml-1" />
+                    )}
+                  </Button>
+                  
+                  <Button
+                    onClick={handleStop}
+                    size="lg"
+                    className="eva-button w-12 h-12 rounded-full"
+                  >
+                    <Square className="w-5 h-5" />
+                  </Button>
+                  
+                  <Button
+                    onClick={handleReset}
+                    size="lg"
+                    className="eva-button w-12 h-12 rounded-full"
+                  >
+                    <RotateCcw className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                {/* 模式描述 */}
+                <div className="text-center mt-6">
+                  <h2 className={`text-xl font-semibold ${currentModeConfig.color} mb-2`}>
+                    {currentModeConfig.name}
+                  </h2>
+                  <p className="text-muted-foreground">
+                    {currentModeConfig.description}
+                  </p>
+                </div>
+              </div>
+
+              {/* 右侧：快捷操作和信息 */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg mb-4 text-primary">快捷操作</h3>
+                
+                {/* 音量控制 */}
+                <div className="eva-panel p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-medium text-white">提示音</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSettings(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }))}
+                    >
+                      {settings.soundEnabled ? (
+                        <Volume2 className="w-4 h-4" />
+                      ) : (
+                        <VolumeX className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {settings.soundEnabled && (
+                    <Slider
+                      value={[settings.soundVolume]}
+                      onValueChange={([value]) => setSettings(prev => ({ ...prev, soundVolume: value }))}
+                      max={100}
+                      step={10}
+                      className="w-full"
+                    />
+                  )}
+                </div>
+
+                {/* 快速设置 */}
+                <div className="eva-panel p-4">
+                  <h4 className="font-medium mb-3 text-white">快速设置</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white">自动开始休息</span>
+                      <Button
+                        variant={settings.autoStartBreaks ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSettings(prev => ({ ...prev, autoStartBreaks: !prev.autoStartBreaks }))}
+                      >
+                        {settings.autoStartBreaks ? '开启' : '关闭'}
+                      </Button>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white">自动开始工作</span>
+                      <Button
+                        variant={settings.autoStartWork ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSettings(prev => ({ ...prev, autoStartWork: !prev.autoStartWork }))}
+                      >
+                        {settings.autoStartWork ? '开启' : '关闭'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 进度指示器 */}
+                <div className="eva-panel p-4">
+                  <h4 className="font-medium mb-3 text-white">本轮进度</h4>
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: settings.sessionsUntilLongBreak }, (_, i) => (
+                      <div
+                        key={i}
+                        className={`
+                          w-3 h-3 rounded-full
+                          ${i < completedSessions % settings.sessionsUntilLongBreak
+                            ? 'bg-primary' 
+                            : 'bg-muted'
+                          }
+                        `}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {settings.sessionsUntilLongBreak - (completedSessions % settings.sessionsUntilLongBreak)} 个番茄后长休息
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -517,6 +744,7 @@ const PomodoroPage = () => {
           settings={settings}
           onSave={handleSettingsUpdate}
           onClose={() => setShowSettings(false)}
+          isMobile={isMobileView}
         />
       )}
 
@@ -526,6 +754,7 @@ const PomodoroPage = () => {
           selectedTheme={selectedTheme}
           onThemeChange={setSelectedTheme}
           onClose={() => setShowThemeSelector(false)}
+          isMobile={isMobileView}
         />
       )}
 
@@ -533,6 +762,7 @@ const PomodoroPage = () => {
         <StatisticsPanel
           stats={todayStats}
           onClose={() => setShowStats(false)}
+          isMobile={isMobileView}
         />
       )}
 

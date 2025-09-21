@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 
-const QuickCommands = ({ onCommandSelect, onClose }) => {
+const QuickCommands = ({ onCommandSelect, onClose, isMobile = false }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
 
@@ -191,147 +191,166 @@ const QuickCommands = ({ onCommandSelect, onClose }) => {
   const popularCommands = commands.filter(cmd => cmd.popular)
 
   return (
-    <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="eva-panel w-full max-w-4xl mx-4 max-h-[80vh] overflow-hidden">
+    <div className={`
+      fixed inset-0 bg-black/50 flex items-center justify-center z-50 
+      ${isMobile ? 'p-2' : 'p-4'}
+    `}>
+      <div className={`
+        eva-panel max-h-[90vh] overflow-hidden flex flex-col
+        ${isMobile ? 'w-full max-w-sm' : 'w-full max-w-4xl'}
+      `}>
         {/* 头部 */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <div className="flex items-center gap-3">
-            <Zap className="w-6 h-6 text-primary" />
-            <h3 className="text-lg font-semibold">快捷指令</h3>
+        <div className={`${isMobile ? 'p-3' : 'p-4'} border-b border-border`}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className={`font-semibold flex items-center gap-2 ${isMobile ? 'text-base' : 'text-lg'}`}>
+              <Zap className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-primary`} />
+              快捷指令
+            </h3>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="w-4 h-4" />
+            </Button>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </Button>
+
+          {/* 搜索框 */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="搜索指令..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`eva-input pl-10 ${isMobile ? 'text-sm' : ''}`}
+            />
+          </div>
         </div>
 
-        <div className="flex h-[60vh]">
-          {/* 左侧分类 */}
-          <div className="w-48 border-r border-border p-4">
-            <div className="space-y-1">
-              {commandCategories.map(category => {
+        {/* 分类标签 */}
+        {!isMobile && (
+          <div className="p-4 border-b border-border">
+            <div className="flex flex-wrap gap-2">
+              {commandCategories.map((category) => {
                 const Icon = category.icon
                 return (
-                  <button
+                  <Button
                     key={category.id}
+                    variant={selectedCategory === category.id ? "default" : "outline"}
+                    size="sm"
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`
-                      w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all border
-                      ${selectedCategory === category.id 
-                        ? 'border-primary text-primary bg-transparent' 
-                        : 'border-transparent hover:border-accent hover:bg-accent/20'
-                      }
-                    `}
+                    className="text-xs"
                   >
-                    <Icon className="w-4 h-4" />
-                    <span className="text-sm">{category.name}</span>
-                  </button>
+                    <Icon className="w-3 h-3 mr-1" />
+                    {category.name}
+                  </Button>
                 )
               })}
             </div>
           </div>
+        )}
 
-          {/* 右侧内容 */}
-          <div className="flex-1 flex flex-col">
-            {/* 搜索框 */}
-            <div className="p-4 border-b border-border">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="搜索指令..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="eva-input pl-10"
-                />
-              </div>
-            </div>
+        {/* 移动端分类选择 */}
+        {isMobile && (
+          <div className="p-3 border-b border-border">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="eva-input w-full text-sm"
+            >
+              {commandCategories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
-            {/* 指令列表 */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {/* 热门指令 */}
-              {selectedCategory === 'all' && !searchTerm && (
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Star className="w-4 h-4 text-yellow-400" />
-                    <h4 className="font-medium">热门指令</h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {popularCommands.map(command => {
-                      const Icon = command.icon
-                      return (
-                        <button
-                          key={command.id}
-                          onClick={() => onCommandSelect(command.command)}
-                          className="border border-border rounded-lg p-4 text-left hover:border-primary hover:bg-accent/10 transition-all"
-                        >
-                          <div className="flex items-start gap-3">
-                            <Icon className="w-5 h-5 text-primary mt-0.5" />
-                            <div>
-                              <h5 className="font-medium mb-1">{command.title}</h5>
-                              <p className="text-sm text-muted-foreground">
-                                {command.description}
-                              </p>
-                            </div>
+        {/* 指令列表 */}
+        <div className="flex-1 overflow-y-auto">
+          <div className={`${isMobile ? 'p-2' : 'p-4'} space-y-2`}>
+            {filteredCommands.map((command) => {
+              const Icon = command.icon
+              return (
+                <div
+                  key={command.id}
+                  className={`
+                    ${isMobile ? 'p-3' : 'p-4'} rounded-lg border border-border 
+                    hover:bg-accent/50 cursor-pointer transition-colors
+                    ${command.popular ? 'ring-1 ring-primary/20' : ''}
+                  `}
+                  onClick={() => {
+                    onCommandSelect(command.command)
+                    onClose()
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`
+                      ${isMobile ? 'w-8 h-8' : 'w-10 h-10'} rounded-lg bg-primary/20 
+                      flex items-center justify-center flex-shrink-0
+                    `}>
+                      <Icon className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-primary`} />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className={`font-medium ${isMobile ? 'text-sm' : ''}`}>
+                          {command.title}
+                        </h4>
+                        {command.popular && (
+                          <div className="flex items-center gap-1">
+                            <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                            {!isMobile && (
+                              <span className="text-xs text-yellow-600">热门</span>
+                            )}
                           </div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* 所有指令 */}
-              <div>
-                {!searchTerm && selectedCategory !== 'all' && (
-                  <h4 className="font-medium mb-3">
-                    {commandCategories.find(c => c.id === selectedCategory)?.name} 指令
-                  </h4>
-                )}
-                
-                <div className="space-y-2">
-                  {filteredCommands.map(command => {
-                    const Icon = command.icon
-                    return (
-                      <button
-                        key={command.id}
-                        onClick={() => onCommandSelect(command.command)}
-                        className="w-full border border-border rounded-lg p-4 text-left hover:border-primary hover:bg-accent/10 transition-all"
-                      >
-                        <div className="flex items-start gap-3">
-                          <Icon className="w-5 h-5 text-primary mt-0.5" />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h5 className="font-medium">{command.title}</h5>
-                              {command.popular && (
-                                <Star className="w-3 h-3 text-yellow-400" />
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {command.description}
-                            </p>
-                          </div>
+                        )}
+                      </div>
+                      
+                      <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                        {command.description}
+                      </p>
+                      
+                      {!isMobile && (
+                        <div className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                          {command.command.length > 100 
+                            ? command.command.substring(0, 100) + '...'
+                            : command.command
+                          }
                         </div>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {filteredCommands.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Search className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>没有找到匹配的指令</p>
+                      )}
+                    </div>
                   </div>
-                )}
+                </div>
+              )
+            })}
+
+            {filteredCommands.length === 0 && (
+              <div className="text-center py-8">
+                <Search className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12'} mx-auto mb-3 text-muted-foreground opacity-50`} />
+                <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>
+                  没有找到匹配的指令
+                </p>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
         {/* 底部提示 */}
-        <div className="p-4 border-t border-border bg-muted/20">
-          <p className="text-xs text-muted-foreground text-center">
-            选择指令后会自动填入输入框，你可以根据需要修改内容
-          </p>
-        </div>
+        {!isMobile && (
+          <div className="p-4 border-t border-border bg-muted/30">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
+                  <Star className="w-3 h-3 text-yellow-500" />
+                  <span>热门指令</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>最近使用</span>
+                </div>
+              </div>
+              <span>点击指令即可使用</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -183,6 +183,10 @@ const NotesPage = () => {
   const [selectedFolderId, setSelectedFolderId] = useState(null)
   const [collapsedCategories, setCollapsedCategories] = useState({})
   
+  // 移动端状态管理
+  const [isMobileView, setIsMobileView] = useState(false)
+  const [mobileActivePanel, setMobileActivePanel] = useState('folders') // 'folders', 'notes', 'editor'
+  
   // 润色弹窗相关状态
   const [showPolishModal, setShowPolishModal] = useState(false)
   const [originalText, setOriginalText] = useState('')
@@ -259,6 +263,38 @@ const NotesPage = () => {
         console.log('需要登录才能获取标签')
       }
       setTags([])
+    }
+  }
+
+  // 检测屏幕尺寸
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 1024)
+    }
+    
+    checkMobileView()
+    window.addEventListener('resize', checkMobileView)
+    return () => window.removeEventListener('resize', checkMobileView)
+  }, [])
+
+  // 移动端面板切换
+  const handleMobilePanelSwitch = (panel) => {
+    setMobileActivePanel(panel)
+  }
+
+  // 移动端选择笔记后自动切换到编辑器
+  const handleMobileSelectNote = async (note) => {
+    await handleSelectNote(note)
+    if (isMobileView) {
+      setMobileActivePanel('editor')
+    }
+  }
+
+  // 移动端新建笔记后自动切换到编辑器
+  const handleMobileNewNote = () => {
+    handleNewNote()
+    if (isMobileView) {
+      setMobileActivePanel('editor')
     }
   }
 
@@ -710,207 +746,286 @@ const NotesPage = () => {
       onDragEnd={handleDragEnd}
     >
       <div className="flex h-[calc(100vh-4rem)]">
-      {/* 左侧文件夹列表 */}
-      <div className="w-56 lg:w-64 xl:w-72 eva-sidebar border-r border-sidebar-border flex flex-col min-w-0">
-        {/* 操作栏 */}
-        <div className="p-3 lg:p-4 border-b border-sidebar-border">
-          <div className="flex gap-2 mb-3">
-            <Button onClick={handleNewNote} className="eva-button flex-1 text-xs lg:text-sm">
-              <Plus className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
-              <span className="hidden sm:inline">新建笔记</span>
-              <span className="sm:hidden">新建</span>
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleCreateFolder}>
-              <FolderPlus className="w-3 h-3 lg:w-4 lg:h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* 文件夹列表 - 可滚动 */}
-        <div className="flex-1 overflow-y-auto p-3 lg:p-4">
-          <h3 className="text-xs lg:text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            文件夹
-          </h3>
-          <div className="space-y-2">
-            {/* 全部笔记选项 */}
-            <div
-              onClick={() => setSelectedFolderId(null)}
-              className={`flex items-center justify-between p-2 rounded-lg hover:bg-sidebar-accent cursor-pointer group ${
-                selectedFolderId === null ? 'bg-sidebar-accent border border-primary' : ''
-              }`}
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <FileText className="w-3 h-3 lg:w-4 lg:h-4 text-primary flex-shrink-0" />
-                <span className="text-xs lg:text-sm text-white truncate">全部笔记</span>
-              </div>
-              <span className="text-xs text-gray-400 group-hover:text-gray-300 flex-shrink-0">
-                {notes.length}
-              </span>
+        {/* 移动端导航栏 */}
+        {isMobileView && (
+          <div className="fixed top-16 left-0 right-0 z-40 bg-sidebar border-b border-sidebar-border">
+            <div className="flex">
+              <button
+                onClick={() => handleMobilePanelSwitch('folders')}
+                className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                  mobileActivePanel === 'folders' 
+                    ? 'text-primary border-b-2 border-primary bg-sidebar-accent' 
+                    : 'text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                <Folder className="w-4 h-4 mx-auto mb-1" />
+                文件夹
+              </button>
+              <button
+                onClick={() => handleMobilePanelSwitch('notes')}
+                className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                  mobileActivePanel === 'notes' 
+                    ? 'text-primary border-b-2 border-primary bg-sidebar-accent' 
+                    : 'text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                <FileText className="w-4 h-4 mx-auto mb-1" />
+                笔记列表
+              </button>
+              <button
+                onClick={() => handleMobilePanelSwitch('editor')}
+                className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                  mobileActivePanel === 'editor' 
+                    ? 'text-primary border-b-2 border-primary bg-sidebar-accent' 
+                    : 'text-gray-400 hover:text-gray-300'
+                }`}
+                disabled={!selectedNote && !isEditing}
+              >
+                <Edit3 className="w-4 h-4 mx-auto mb-1" />
+                编辑器
+              </button>
             </div>
-            {categories.map(category => {
-               const categoryFolders = folders.filter(f => f.category_id === category.id)
-               if (categoryFolders.length === 0) return null
-               
-               const isCollapsed = collapsedCategories[category.id]
-               const totalNotesInCategory = categoryFolders.reduce((total, folder) => {
-                 return total + notes.filter(note => note.folder_id === folder.id).length
-               }, 0)
-               
-               return (
-                 <div key={category.id} className="mb-4">
-                   <div 
-                     onClick={() => toggleCategoryCollapse(category.id)}
-                     className="flex items-center justify-between p-2 rounded-lg hover:bg-sidebar-accent cursor-pointer group mb-2"
-                   >
-                     <div className="flex items-center gap-2 min-w-0">
-                       <ChevronRight className={`w-3 h-3 lg:w-4 lg:h-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ${
-                         isCollapsed ? 'rotate-0' : 'rotate-90'
-                       }`} />
-                       <h4 className="text-xs font-medium text-gray-300 uppercase tracking-wider truncate">
-                         {category.name}
-                       </h4>
-                     </div>
-                     <span className="text-xs text-gray-500 group-hover:text-gray-400 flex-shrink-0">
-                       {totalNotesInCategory}
-                     </span>
-                   </div>
-                   
-                   <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                     isCollapsed ? 'max-h-0 opacity-0' : 'max-h-96 opacity-100'
-                   }`}>
-                     <DroppableCategory category={category}>
-                       <SortableContext items={categoryFolders.map(folder => folder.id)} strategy={verticalListSortingStrategy}>
-                         {categoryFolders.map((folder) => (
-                           <DraggableFolder
-                             key={folder.id}
-                             folder={folder}
-                             isSelected={selectedFolderId === folder.id}
-                             onSelectFolder={setSelectedFolderId}
-                             notes={notes}
-                             editingFolderId={editingFolderId}
-                             setEditingFolderId={setEditingFolderId}
-                             editingFolderName={editingFolderName}
-                             setEditingFolderName={setEditingFolderName}
-                             handleSaveFolder={handleSaveFolderEdit}
-                             handleDeleteFolder={handleDeleteFolder}
-                           />
-                         ))}
-                       </SortableContext>
-                     </DroppableCategory>
-                   </div>
-                 </div>
-               )
-             })}
+          </div>
+        )}
+        {/* 左侧文件夹列表 */}
+        <div className={`eva-sidebar border-r border-sidebar-border flex flex-col min-w-0 ${
+          isMobileView 
+            ? `fixed top-28 left-0 bottom-0 w-full z-30 ${mobileActivePanel === 'folders' ? 'block' : 'hidden'}` 
+            : 'w-56 lg:w-64 xl:w-72'
+        }`}>
+          {/* 操作栏 */}
+          <div className="p-3 lg:p-4 border-b border-sidebar-border">
+            <div className="flex gap-2 mb-3">
+              <Button 
+                onClick={isMobileView ? handleMobileNewNote : handleNewNote} 
+                className="eva-button flex-1 text-xs lg:text-sm"
+              >
+                <Plus className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">新建笔记</span>
+                <span className="sm:hidden">新建</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleCreateFolder}>
+                <FolderPlus className="w-3 h-3 lg:w-4 lg:h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* 文件夹列表 - 可滚动 */}
+          <div className="flex-1 overflow-y-auto p-3 lg:p-4">
+            <h3 className="text-xs lg:text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+              文件夹
+            </h3>
+            <div className="space-y-2">
+              {/* 全部笔记选项 */}
+              <div
+                onClick={() => {
+                  setSelectedFolderId(null)
+                  if (isMobileView) handleMobilePanelSwitch('notes')
+                }}
+                className={`flex items-center justify-between p-2 rounded-lg hover:bg-sidebar-accent cursor-pointer group ${
+                  selectedFolderId === null ? 'bg-sidebar-accent border border-primary' : ''
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="w-3 h-3 lg:w-4 lg:h-4 text-primary flex-shrink-0" />
+                  <span className="text-xs lg:text-sm text-white truncate">全部笔记</span>
+                </div>
+                <span className="text-xs text-gray-400 group-hover:text-gray-300 flex-shrink-0">
+                  {notes.length}
+                </span>
+              </div>
+
+              {/* 分类和文件夹 */}
+              {categories.map(category => {
+                const categoryFolders = folders.filter(f => f.category_id === category.id)
+                if (categoryFolders.length === 0) return null
+                
+                const isCollapsed = collapsedCategories[category.id]
+                const totalNotesInCategory = categoryFolders.reduce((total, folder) => {
+                  return total + notes.filter(note => note.folder_id === folder.id).length
+                }, 0)
+                
+                return (
+                  <div key={category.id} className="mb-4">
+                    <div 
+                      onClick={() => toggleCategoryCollapse(category.id)}
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-sidebar-accent cursor-pointer group mb-2"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <ChevronRight className={`w-3 h-3 lg:w-4 lg:h-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ${
+                          isCollapsed ? 'rotate-0' : 'rotate-90'
+                        }`} />
+                        <h4 className="text-xs font-medium text-gray-300 uppercase tracking-wider truncate">
+                          {category.name}
+                        </h4>
+                      </div>
+                      <span className="text-xs text-gray-500 group-hover:text-gray-400 flex-shrink-0">
+                        {totalNotesInCategory}
+                      </span>
+                    </div>
+                    
+                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      isCollapsed ? 'max-h-0 opacity-0' : 'max-h-96 opacity-100'
+                    }`}>
+                      <DroppableCategory category={category}>
+                        <SortableContext items={categoryFolders.map(folder => folder.id)} strategy={verticalListSortingStrategy}>
+                          {categoryFolders.map((folder) => (
+                            <div
+                              key={folder.id}
+                              onClick={() => {
+                                setSelectedFolderId(folder.id)
+                                if (isMobileView) handleMobilePanelSwitch('notes')
+                              }}
+                            >
+                              <DraggableFolder
+                                folder={folder}
+                                isSelected={selectedFolderId === folder.id}
+                                onSelectFolder={setSelectedFolderId}
+                                notes={notes}
+                                editingFolderId={editingFolderId}
+                                setEditingFolderId={setEditingFolderId}
+                                editingFolderName={editingFolderName}
+                                setEditingFolderName={setEditingFolderName}
+                                handleSaveFolder={handleSaveFolderEdit}
+                                handleDeleteFolder={handleDeleteFolder}
+                              />
+                            </div>
+                          ))}
+                        </SortableContext>
+                      </DroppableCategory>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* 中间笔记列表 */}
-      <div className="w-72 lg:w-80 xl:w-96 eva-sidebar border-r border-sidebar-border flex flex-col min-w-0">
-        {/* 搜索栏 */}
-        <div className="p-3 lg:p-4 border-b border-sidebar-border">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 lg:w-4 lg:h-4 text-muted-foreground" />
-            <Input
-              placeholder="搜索笔记..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="eva-input pl-8 lg:pl-10 text-xs lg:text-sm"
+        {/* 中间笔记列表 */}
+        <div className={`eva-sidebar border-r border-sidebar-border flex flex-col min-w-0 ${
+          isMobileView 
+            ? `fixed top-28 left-0 bottom-0 w-full z-30 ${mobileActivePanel === 'notes' ? 'block' : 'hidden'}` 
+            : 'w-72 lg:w-80 xl:w-96'
+        }`}>
+          {/* 搜索栏 */}
+          <div className="p-3 lg:p-4 border-b border-sidebar-border">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 lg:w-4 lg:h-4 text-muted-foreground" />
+              <Input
+                placeholder="搜索笔记..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="eva-input pl-8 lg:pl-10 text-xs lg:text-sm"
+              />
+            </div>
+          </div>
+
+          {/* 笔记列表 */}
+          <div className="flex-1 overflow-y-auto">
+            <NotesList
+              notes={filteredNotes}
+              selectedNote={selectedNote}
+              onSelectNote={isMobileView ? handleMobileSelectNote : handleSelectNote}
+              folders={folders}
+              categories={categories}
+              onPinNote={handlePinNote}
+              onDeleteNote={handleDeleteNoteById}
             />
           </div>
         </div>
 
-        {/* 笔记列表 */}
-        <div className="flex-1 overflow-y-auto">
-          <NotesList
-            notes={filteredNotes}
-            selectedNote={selectedNote}
-            onSelectNote={handleSelectNote}
-            folders={folders}
-            categories={categories}
-            onPinNote={handlePinNote}
-            onDeleteNote={handleDeleteNoteById}
-          />
-        </div>
-      </div>
-
-      {/* 右侧编辑区域 */}
-      <div className="flex-1 flex flex-col">
-        {console.log('🎯 渲染条件检查:', { selectedNote: !!selectedNote, selectedNoteId: selectedNote?.id, isEditing, currentNoteData })}
-        {selectedNote || isEditing ? (
-          <>
-            {/* 编辑器工具栏 */}
-            <div className="eva-header p-4 border-b border-border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-lg font-semibold">
-                    {isEditing ? (selectedNote ? '编辑笔记' : '新建笔记') : selectedNote?.title}
-                  </h2>
-                  {selectedNote && !isEditing && (
-                    <div className="flex gap-1">
-                      {selectedNote.tags?.map(tag => (
-                        <span key={tag.id} className="px-2 py-1 bg-primary/20 text-primary text-xs rounded">
-                          {tag.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  {isEditing && (
-                    <>
-                      <Button onClick={handlePolishText} disabled={loading} className="eva-button" size="sm">
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        {loading ? '润色中...' : 'AI润色'}
-                      </Button>
-                      <Button onClick={handleSaveNote} className="eva-button" size="sm">
-                        <Save className="w-4 h-4 mr-2" />
-                        保存
-                      </Button>
-                    </>
-                  )}
+        {/* 右侧编辑区域 */}
+        <div className={`flex flex-col ${
+          isMobileView 
+            ? `fixed top-28 left-0 bottom-0 w-full z-30 ${mobileActivePanel === 'editor' ? 'block' : 'hidden'}` 
+            : 'flex-1'
+        }`}>
+          {console.log('🎯 渲染条件检查:', { selectedNote: !!selectedNote, selectedNoteId: selectedNote?.id, isEditing, currentNoteData })}
+          {selectedNote || isEditing ? (
+            <>
+              {/* 编辑器工具栏 */}
+              <div className="eva-header p-3 lg:p-4 border-b border-border">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-0">
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4 min-w-0">
+                    <h2 className="text-base lg:text-lg font-semibold truncate">
+                      {isEditing ? (selectedNote ? '编辑笔记' : '新建笔记') : selectedNote?.title}
+                    </h2>
+                    {selectedNote && !isEditing && selectedNote.tags?.length > 0 && (
+                      <div className="flex gap-1 flex-wrap">
+                        {selectedNote.tags.map(tag => (
+                          <span key={tag.id} className="px-2 py-1 bg-primary/20 text-primary text-xs rounded">
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   
-                  {!isEditing && selectedNote && (
-                    <>
-                      <Button onClick={handleEditNote} variant="outline" size="sm">
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        编辑
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {isMobileView && (
+                      <Button 
+                        onClick={() => handleMobilePanelSwitch('notes')} 
+                        variant="outline" 
+                        size="sm"
+                        className="text-xs"
+                      >
+                        返回列表
                       </Button>
-                      <Button onClick={handleDeleteNote} variant="outline" size="sm">
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        删除
-                      </Button>
-                    </>
-                  )}
+                    )}
+                    
+                    {isEditing && (
+                      <>
+                        <Button onClick={handlePolishText} disabled={loading} className="eva-button text-xs lg:text-sm" size="sm">
+                          <Sparkles className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                          {loading ? '润色中...' : 'AI润色'}
+                        </Button>
+                        <Button onClick={handleSaveNote} className="eva-button text-xs lg:text-sm" size="sm">
+                          <Save className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                          保存
+                        </Button>
+                      </>
+                    )}
+                    
+                    {!isEditing && selectedNote && (
+                      <>
+                        <Button onClick={handleEditNote} variant="outline" size="sm" className="text-xs lg:text-sm">
+                          <Edit3 className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                          编辑
+                        </Button>
+                        <Button onClick={handleDeleteNote} variant="outline" size="sm" className="text-xs lg:text-sm">
+                          <Trash2 className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                          删除
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* 编辑器内容 */}
-            <div className="flex-1 p-4">
-              <NoteEditor
-                note={currentNoteData}
-                isEditing={isEditing}
-                onChange={setCurrentNoteData}
-              />
+              {/* 编辑器内容 */}
+              <div className="flex-1 p-3 lg:p-4 overflow-hidden">
+                <NoteEditor
+                  note={currentNoteData}
+                  isEditing={isEditing}
+                  onChange={setCurrentNoteData}
+                />
+              </div>
+            </>
+          ) : (
+            /* 空状态 */
+            <div className="flex-1 flex items-center justify-center p-4">
+              <div className="text-center">
+                <FileText className="w-12 h-12 lg:w-16 lg:h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-base lg:text-lg font-semibold mb-2 text-white">选择一篇笔记开始编辑</h3>
+                <p className="text-sm lg:text-base text-gray-300 mb-4">或者创建一篇新的笔记</p>
+                <Button onClick={isMobileView ? handleMobileNewNote : handleNewNote} className="eva-button text-sm lg:text-base">
+                  <Plus className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
+                  新建笔记
+                </Button>
+              </div>
             </div>
-          </>
-        ) : (
-          /* 空状态 */
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2 text-white">选择一篇笔记开始编辑</h3>
-              <p className="text-gray-300 mb-4">或者创建一篇新的笔记</p>
-              <Button onClick={handleNewNote} className="eva-button">
-                <Plus className="w-4 h-4 mr-2" />
-                新建笔记
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
       {/* AI建议弹窗 */}
       {showAISuggestion && (

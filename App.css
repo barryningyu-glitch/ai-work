@@ -2756,18 +2756,239 @@
   }
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
+/* 移动端菜单按钮 */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all var(--transition-fast);
+}
+
+.mobile-menu-btn:hover {
+  background: var(--glow-primary);
+}
+
+/* 移动端关闭按钮 */
+.mobile-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all var(--transition-fast);
+}
+
+.mobile-close-btn:hover {
+  background: var(--glow-primary);
+}
+
+/* 移动端菜单覆盖层 */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 998;
+  display: none;
+}
+
+/* 状态文本响应式 */
+.status-text {
+  display: inline;
+}
+
+/* 平板设备响应式 */
+@media (max-width: 1024px) {
   .sidebar {
-    width: 240px;
+    width: 220px;
+  }
+  
+  .main-content {
+    margin-left: 220px;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  
+  .page-content {
+    padding: 1rem;
+  }
+}
+
+/* 移动端响应式设计 */
+@media (max-width: 768px) {
+  /* 显示移动端按钮 */
+  .mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .mobile-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .mobile-menu-overlay {
+    display: block;
+  }
+  
+  /* 侧边栏移动端样式 */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100vh;
+    z-index: 999;
+    transition: left 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .sidebar-mobile-open {
+    left: 0;
+  }
+  
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+  }
+  
+  /* 主内容区域 */
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  /* 顶部栏 */
+  .top-bar {
+    padding: 0.75rem 1rem;
+  }
+  
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .page-title {
+    font-size: 1.25rem;
+  }
+  
+  /* 状态指示器 */
+  .status-text {
+    display: none;
+  }
+  
+  .notification-btn {
+    padding: 8px;
+  }
+  
+  /* 页面内容 */
+  .page-content {
+    padding: 0.75rem;
+    height: calc(100vh - 4rem);
+  }
+  
+  /* 仪表盘网格 */
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
   
   .dashboard-status {
     grid-template-columns: 1fr;
   }
   
+  .status-grid {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  /* 功能卡片 */
+  .feature-card {
+    padding: 1rem;
+  }
+  
+  .feature-card h3 {
+    font-size: 1rem;
+  }
+  
+  .feature-card p {
+    font-size: 0.875rem;
+  }
+  
+  /* 快速操作按钮 */
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .eva-button {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  /* 系统状态 */
+  .system-status .status-item {
+    padding: 0.75rem;
+  }
+  
+  .system-status .status-item h4 {
+    font-size: 0.875rem;
+  }
+}
+
+/* 小屏幕设备 */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 260px;
+    left: -260px;
+  }
+  
+  .page-title {
+    font-size: 1.125rem;
+  }
+  
+  .page-content {
+    padding: 0.5rem;
+  }
+  
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .feature-card {
+    padding: 0.75rem;
+  }
+  
+  .eva-button {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8rem;
+  }
+  
+  /* 导航项文字 */
+  .nav-item-text {
+    font-size: 0.875rem;
+  }
+  
+  /* Logo文字 */
+  .logo-text {
+    font-size: 1rem;
   }
 }
 
