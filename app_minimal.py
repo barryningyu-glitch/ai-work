@@ -26,6 +26,11 @@ app.add_middleware(
 async def root():
     return {"message": "Cortex AI Workspace API - Minimal Version", "status": "running"}
 
+# 兼容 /api 与 /api/ 两个路径，避免代理对结尾斜杠重定向
+@app.get("/api")
+async def api_root_no_slash():
+    return {"message": "Cortex AI Workspace API", "version": "1.0.0"}
+
 @app.get("/api/")
 async def api_root():
     return {"message": "Cortex AI Workspace API", "version": "1.0.0"}
