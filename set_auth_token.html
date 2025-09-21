@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置认证Token</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 设置认证Token</h1>
+        
+        <div class="step">
+            <h3>步骤1: 自动登录获取Token</h3>
+            <button onclick="autoLogin()">自动登录</button>
+            <div id="loginStatus"></div>
+        </div>
+
+        <div class="step">
+            <h3>步骤2: 打开应用</h3>
+            <button onclick="openApp()">打开应用</button>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        async function autoLogin() {
+            updateStatus('loginStatus', '正在自动登录...', 'info');
+            
+            try {
+                const response = await fetch('/api/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: '宁宇',
+                        password: 'ny123456'
+                    }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.access_token);
+                    updateStatus('loginStatus', `✅ 登录成功！Token已保存`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    updateStatus('loginStatus', `❌ 登录失败: ${errorData.detail}`, 'error');
+                }
+            } catch (error) {
+                updateStatus('loginStatus', `❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        function openApp() {
+            window.open('http://localhost:3000', '_blank');
+        }
+
+        // 页面加载时检查当前状态
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                updateStatus('loginStatus', '检测到已有token', 'info');
+            } else {
+                updateStatus('loginStatus', '没有检测到token，需要登录', 'info');
+            }
+        };
+    </script>
+</body>
+</html>

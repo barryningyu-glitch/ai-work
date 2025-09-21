@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端应用测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #00cc6a;
+        }
+        .result {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>前端应用测试</h1>
+        <p>这个页面将帮助你设置正确的token并测试前端应用</p>
+        
+        <button onclick="setTokenAndRedirect()">设置Token并打开应用</button>
+        <button onclick="checkCurrentToken()">检查当前Token</button>
+        <button onclick="clearToken()">清除Token</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        // 宁宇用户的token
+        const VALID_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJcdTViODFcdTViODciLCJleHAiOjE3NTgxODgxNDR9.kMC5AAnVqeh-XN3VP7r3TA9HeHxm7fipatoZAox-FtQ';
+        
+        function setTokenAndRedirect() {
+            localStorage.setItem('token', VALID_TOKEN);
+            document.getElementById('result').textContent = 'Token已设置，正在打开应用...';
+            
+            // 延迟一下再打开，确保token设置成功
+            setTimeout(() => {
+                window.open('http://localhost:3000', '_blank');
+            }, 500);
+        }
+        
+        function checkCurrentToken() {
+            const token = localStorage.getItem('token');
+            const result = document.getElementById('result');
+            
+            if (token) {
+                result.textContent = `当前Token: ${token.substring(0, 50)}...\n\n这是${token === VALID_TOKEN ? '正确的' : '错误的'}token`;
+            } else {
+                result.textContent = '没有找到token';
+            }
+        }
+        
+        function clearToken() {
+            localStorage.removeItem('token');
+            document.getElementById('result').textContent = 'Token已清除';
+        }
+        
+        // 页面加载时检查token
+        window.onload = function() {
+            checkCurrentToken();
+        }
+    </script>
+</body>
+</html>

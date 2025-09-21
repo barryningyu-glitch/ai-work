@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修复Token - Cortex AI Workspace</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #00ff88;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #00ff88;
+        }
+        .step {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 255, 136, 0.05);
+            border-radius: 5px;
+            border-left: 3px solid #00ff88;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #00ff88;
+        }
+        button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            background: #00cc6a;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff4444;
+        }
+        .info {
+            background: rgba(0, 136, 255, 0.2);
+            color: #4488ff;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 5px;
+            color: #00ff88;
+            font-family: monospace;
+        }
+        input::placeholder {
+            color: rgba(0, 255, 136, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 修复Token问题</h1>
+        
+        <div class="step">
+            <h3>步骤1: 自动登录并获取新Token</h3>
+            <p>点击下面的按钮自动登录并获取新的有效token：</p>
+            <button onclick="autoLogin()">自动登录获取Token</button>
+            <div id="loginStatus"></div>
+        </div>
+
+        <div class="step">
+            <h3>步骤2: 验证Token有效性</h3>
+            <p>验证当前token是否有效：</p>
+            <button onclick="verifyToken()">验证Token</button>
+            <div id="verifyStatus"></div>
+        </div>
+
+        <div class="step">
+            <h3>步骤3: 测试笔记API</h3>
+            <p>测试是否能正常获取笔记内容：</p>
+            <button onclick="testNotesAPI()">测试笔记API</button>
+            <div id="apiStatus"></div>
+        </div>
+
+        <div class="step">
+            <h3>步骤4: 返回应用</h3>
+            <p>Token修复完成后，返回主应用：</p>
+            <button onclick="goToApp()">返回应用</button>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        async function autoLogin() {
+            updateStatus('loginStatus', '正在自动登录...', 'info');
+            
+            try {
+                const response = await fetch('/api/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: '宁宇',
+                        password: 'ny123456'
+                    }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.access_token);
+                    updateStatus('loginStatus', `✅ 登录成功！Token已保存到本地存储`, 'success');
+                } else {
+                    const errorData = await response.json();
+                    updateStatus('loginStatus', `❌ 登录失败: ${errorData.detail}`, 'error');
+                }
+            } catch (error) {
+                updateStatus('loginStatus', `❌ 网络错误: ${error.message}`, 'error');
+            }
+        }
+
+        async function verifyToken() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                updateStatus('verifyStatus', '❌ 没有找到token，请先登录', 'error');
+                return;
+            }
+
+            updateStatus('verifyStatus', '正在验证token...', 'info');
+
+            try {
+                const response = await fetch('/api/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    updateStatus('verifyStatus', `✅ Token有效！用户: ${userData.username}`, 'success');
+                } else {
+                    updateStatus('verifyStatus', `❌ Token无效，状态码: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                updateStatus('verifyStatus', `❌ 验证失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testNotesAPI() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                updateStatus('apiStatus', '❌ 没有找到token，请先登录', 'error');
+                return;
+            }
+
+            updateStatus('apiStatus', '正在测试笔记API...', 'info');
+
+            try {
+                // 测试获取笔记列表
+                const response = await fetch('/api/notes/tree', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const notes = await response.json();
+                    updateStatus('apiStatus', `✅ 笔记API正常！获取到 ${notes.length} 个文件夹`, 'success');
+                } else {
+                    updateStatus('apiStatus', `❌ 笔记API失败，状态码: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                updateStatus('apiStatus', `❌ API测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        function goToApp() {
+            window.location.href = '/';
+        }
+
+        // 页面加载时检查当前状态
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                updateStatus('loginStatus', '检测到已有token，可以直接验证', 'info');
+            } else {
+                updateStatus('loginStatus', '没有检测到token，需要重新登录', 'info');
+            }
+        };
+    </script>
+</body>
+</html>

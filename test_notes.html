@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试笔记功能</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #00cc6a;
+        }
+        .result {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        input {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>笔记功能测试</h1>
+        <button onclick="setToken()">设置Token</button>
+        <button onclick="testGetNotes()">获取笔记列表</button>
+        <button onclick="testGetNote()">获取单个笔记</button>
+        <input type="text" id="noteId" placeholder="输入笔记ID" style="width: 300px;">
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        function setToken() {
+            const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJcdTViODFcdTViODciLCJleHAiOjE3NTgxODgxNDR9.kMC5AAnVqeh-XN3VP7r3TA9HeHxm7fipatoZAox-FtQ';
+            localStorage.setItem('token', token);
+            document.getElementById('result').innerHTML = '<p>Token已设置（宁宇用户）</p>';
+        }
+        
+        async function testGetNotes() {
+            const token = localStorage.getItem('token');
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/notes/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const notes = await response.json();
+                    resultDiv.textContent = '笔记列表:\n' + JSON.stringify(notes, null, 2);
+                } else {
+                    const error = await response.text();
+                    resultDiv.textContent = `错误 ${response.status}: ${error}`;
+                }
+            } catch (error) {
+                resultDiv.textContent = '请求失败: ' + error.message;
+            }
+        }
+        
+        async function testGetNote() {
+            const token = localStorage.getItem('token');
+            const noteId = document.getElementById('noteId').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!noteId) {
+                resultDiv.textContent = '请输入笔记ID';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/notes/${noteId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const note = await response.json();
+                    resultDiv.textContent = '笔记详情:\n' + JSON.stringify(note, null, 2);
+                } else {
+                    const error = await response.text();
+                    resultDiv.textContent = `错误 ${response.status}: ${error}`;
+                }
+            } catch (error) {
+                resultDiv.textContent = '请求失败: ' + error.message;
+            }
+        }
+        
+        // 页面加载时检查token
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('result').textContent = '已有Token: ' + token.substring(0, 50) + '...';
+            }
+        };
+    </script>
+</body>
+</html>

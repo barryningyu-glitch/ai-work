@@ -1,0 +1,402 @@
+/* 机甲驾驶舱组件样式 */
+
+/* 机甲风格按钮 */
+.mecha-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-family: var(--font-matrix-ui);
+  font-size: var(--text-ui);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 2px solid var(--border-secondary);
+  cursor: pointer;
+  transition: all var(--transition-normal) ease;
+  overflow: hidden;
+  
+  /* 机甲斜切角 */
+  clip-path: polygon(
+    0 var(--bevel-angle), 
+    var(--bevel-angle) 0, 
+    100% 0, 
+    100% calc(100% - var(--bevel-angle)), 
+    calc(100% - var(--bevel-angle)) 100%, 
+    0 100%
+  );
+}
+
+/* 按钮内部框架效果 */
+.mecha-button::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
+  z-index: -1;
+  clip-path: inherit;
+  transition: all var(--transition-normal) ease;
+}
+
+/* 按钮辉光效果 */
+.mecha-button::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--glow-accent), transparent, var(--glow-accent));
+  z-index: -2;
+  opacity: 0;
+  clip-path: inherit;
+  transition: opacity var(--transition-normal) ease;
+}
+
+/* 按钮悬停状态 */
+.mecha-button:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 16px var(--shadow-color),
+    0 0 16px var(--glow-accent);
+}
+
+.mecha-button:hover::after {
+  opacity: 1;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* 按钮激活状态 */
+.mecha-button:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 8px var(--shadow-color),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 主要按钮变体 */
+.mecha-button.primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--text-inverse);
+}
+
+.mecha-button.primary::before {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+}
+
+.mecha-button.primary:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-accent);
+}
+
+/* 强调按钮变体 */
+.mecha-button.accent {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--text-inverse);
+}
+
+.mecha-button.accent::before {
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+}
+
+.mecha-button.accent:hover {
+  background: var(--color-accent-hover);
+  box-shadow: 
+    0 4px 16px var(--shadow-color),
+    0 0 20px var(--glow-accent);
+}
+
+/* 危险按钮变体 */
+.mecha-button.danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--text-inverse);
+}
+
+.mecha-button.danger::before {
+  background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-hover) 100%);
+}
+
+.mecha-button.danger:hover {
+  background: var(--color-danger-hover);
+  box-shadow: 
+    0 4px 16px rgba(229, 57, 53, 0.3),
+    0 0 20px var(--glow-danger);
+}
+
+/* 机甲风格卡片 */
+.mecha-card {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-secondary);
+  padding: 24px;
+  transition: all var(--transition-normal) ease;
+  overflow: hidden;
+  
+  /* 机甲斜切角 */
+  clip-path: polygon(
+    0 var(--bevel-angle), 
+    var(--bevel-angle) 0, 
+    100% 0, 
+    100% calc(100% - var(--bevel-angle)), 
+    calc(100% - var(--bevel-angle)) 100%, 
+    0 100%
+  );
+}
+
+/* 卡片内部框架 */
+.mecha-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--glow-primary) 0%, transparent 50%, var(--glow-primary) 100%);
+  opacity: 0.1;
+  z-index: -1;
+  clip-path: inherit;
+}
+
+/* 卡片边框装饰 */
+.mecha-card::after {
+  content: '';
+  position: absolute;
+  top: var(--bevel-angle);
+  left: 0;
+  width: 3px;
+  height: calc(100% - 2 * var(--bevel-angle));
+  background: linear-gradient(180deg, var(--color-accent) 0%, transparent 50%, var(--color-accent) 100%);
+  opacity: 0.6;
+}
+
+/* 卡片悬停效果 */
+.mecha-card:hover {
+  border-color: var(--color-accent);
+  box-shadow: 
+    var(--shadow-strong),
+    0 0 20px var(--glow-accent);
+  transform: translateY(-4px);
+}
+
+.mecha-card:hover::before {
+  opacity: 0.2;
+}
+
+/* 机甲风格面板 */
+.mecha-panel {
+  position: relative;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border-primary);
+  padding: 20px;
+  margin: 16px 0;
+  
+  /* 复杂的机甲边框 */
+  clip-path: polygon(
+    0 var(--bevel-large), 
+    var(--bevel-large) 0, 
+    calc(100% - var(--bevel-large)) 0,
+    100% var(--bevel-large),
+    100% calc(100% - var(--bevel-large)), 
+    calc(100% - var(--bevel-large)) 100%, 
+    var(--bevel-large) 100%,
+    0 calc(100% - var(--bevel-large))
+  );
+}
+
+/* 面板标题 */
+.mecha-panel-title {
+  font-family: var(--font-matrix-title);
+  font-size: var(--text-h3);
+  font-weight: 700;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-secondary);
+  position: relative;
+}
+
+.mecha-panel-title::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: var(--color-accent);
+  box-shadow: 0 0 8px var(--glow-accent);
+}
+
+/* 机甲风格输入框 */
+.mecha-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-family: var(--font-matrix-body);
+  font-size: var(--text-body);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 2px solid var(--border-secondary);
+  transition: all var(--transition-normal) ease;
+  
+  /* 轻微斜切角 */
+  clip-path: polygon(
+    0 4px, 
+    4px 0, 
+    100% 0, 
+    100% calc(100% - 4px), 
+    calc(100% - 4px) 100%, 
+    0 100%
+  );
+}
+
+.mecha-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 
+    0 0 0 2px var(--glow-accent),
+    0 4px 16px var(--shadow-color);
+}
+
+.mecha-input::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* 机甲风格选择器 */
+.mecha-select {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.mecha-select-trigger {
+  width: 100%;
+  padding: 12px 16px;
+  font-family: var(--font-matrix-body);
+  font-size: var(--text-body);
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 2px solid var(--border-secondary);
+  cursor: pointer;
+  transition: all var(--transition-normal) ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+  clip-path: polygon(
+    0 4px, 
+    4px 0, 
+    100% 0, 
+    100% calc(100% - 4px), 
+    calc(100% - 4px) 100%, 
+    0 100%
+  );
+}
+
+.mecha-select-trigger:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 8px var(--glow-accent);
+}
+
+/* 机甲风格标签 */
+.mecha-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  font-family: var(--font-matrix-ui);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--color-accent);
+  color: var(--text-inverse);
+  
+  clip-path: polygon(
+    0 2px, 
+    2px 0, 
+    calc(100% - 8px) 0,
+    100% 50%,
+    calc(100% - 8px) 100%, 
+    2px 100%,
+    0 calc(100% - 2px)
+  );
+}
+
+.mecha-badge.primary {
+  background: var(--color-primary);
+}
+
+.mecha-badge.danger {
+  background: var(--color-danger);
+}
+
+/* 机甲风格进度条 */
+.mecha-progress {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+  overflow: hidden;
+  
+  clip-path: polygon(
+    0 2px, 
+    2px 0, 
+    100% 0, 
+    100% calc(100% - 2px), 
+    calc(100% - 2px) 100%, 
+    0 100%
+  );
+}
+
+.mecha-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+  transition: width var(--transition-slow) ease;
+  position: relative;
+}
+
+.mecha-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 100%);
+  animation: progressScan 2s ease-in-out infinite;
+}
+
+@keyframes progressScan {
+  0% { transform: translateX(-20px); }
+  100% { transform: translateX(20px); }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .mecha-button {
+    padding: 10px 20px;
+    font-size: 12px;
+  }
+  
+  .mecha-card {
+    padding: 16px;
+  }
+  
+  .mecha-panel {
+    padding: 16px;
+    margin: 12px 0;
+  }
+}

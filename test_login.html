@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试登录和数据持久化</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0f1c;
+            color: #ccd6f6;
+        }
+        .test-section {
+            background: rgba(26, 35, 50, 0.8);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        button {
+            background: #00ff88;
+            color: #0a0f1c;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #00cc6a;
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: #ccd6f6;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 数据持久化测试工具</h1>
+    
+    <div class="test-section">
+        <h2>1. 登录测试</h2>
+        <input type="text" id="username" placeholder="用户名" value="宁宇">
+        <input type="password" id="password" placeholder="密码" value="ny123456">
+        <button onclick="testLogin()">登录</button>
+        <button onclick="checkAuthStatus()">检查认证状态</button>
+        <div id="loginResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. API测试</h2>
+        <button onclick="testGetNotes()">获取笔记</button>
+        <button onclick="testGetTags()">获取标签</button>
+        <button onclick="testCreateNote()">创建测试笔记</button>
+        <div id="apiResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 数据持久化测试</h2>
+        <button onclick="testDataPersistence()">完整测试</button>
+        <div id="persistenceResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        
+        function log(message) {
+            console.log(message);
+            return message;
+        }
+
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.access_token);
+                    resultDiv.textContent = log(`✅ 登录成功！Token已保存到localStorage\nToken: ${data.access_token.substring(0, 50)}...`);
+                } else {
+                    const error = await response.text();
+                    resultDiv.textContent = log(`❌ 登录失败: ${error}`);
+                }
+            } catch (error) {
+                resultDiv.textContent = log(`❌ 网络错误: ${error.message}`);
+            }
+        }
+
+        async function checkAuthStatus() {
+            const token = localStorage.getItem('token');
+            const resultDiv = document.getElementById('loginResult');
+            
+            if (!token) {
+                resultDiv.textContent = log('❌ 没有找到token');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    resultDiv.textContent = log(`✅ 认证有效！用户信息:\n${JSON.stringify(user, null, 2)}`);
+                } else {
+                    resultDiv.textContent = log(`❌ Token无效: ${response.status}`);
+                }
+            } catch (error) {
+                resultDiv.textContent = log(`❌ 认证检查失败: ${error.message}`);
+            }
+        }
+
+        async function apiRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` }),
+                    ...options.headers,
+                },
+                ...options,
+            };
+            
+            const response = await fetch(`${API_BASE}${endpoint}`, config);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+            }
+            return await response.json();
+        }
+
+        async function testGetNotes() {
+            const resultDiv = document.getElementById('apiResult');
+            try {
+                const notes = await apiRequest('/notes/tree');
+                resultDiv.textContent = log(`✅ 获取笔记成功:\n${JSON.stringify(notes, null, 2)}`);
+            } catch (error) {
+                resultDiv.textContent = log(`❌ 获取笔记失败: ${error.message}`);
+            }
+        }
+
+        async function testGetTags() {
+            const resultDiv = document.getElementById('apiResult');
+            try {
+                const tags = await apiRequest('/notes/tags');
+                resultDiv.textContent = log(`✅ 获取标签成功:\n${JSON.stringify(tags, null, 2)}`);
+            } catch (error) {
+                resultDiv.textContent = log(`❌ 获取标签失败: ${error.message}`);
+            }
+        }
+
+        async function testCreateNote() {
+            const resultDiv = document.getElementById('apiResult');
+            try {
+                const noteData = {
+                    title: `测试笔记 ${new Date().toLocaleString()}`,
+                    content: '这是一个测试笔记，用于验证数据持久化功能。',
+                    category_id: 1,
+                    tags: ['测试', '持久化']
+                };
+                
+                const note = await apiRequest('/notes', {
+                    method: 'POST',
+                    body: JSON.stringify(noteData)
+                });
+                
+                resultDiv.textContent = log(`✅ 创建笔记成功:\n${JSON.stringify(note, null, 2)}`);
+            } catch (error) {
+                resultDiv.textContent = log(`❌ 创建笔记失败: ${error.message}`);
+            }
+        }
+
+        async function testDataPersistence() {
+            const resultDiv = document.getElementById('persistenceResult');
+            let results = [];
+            
+            try {
+                // 1. 检查认证
+                results.push('🔍 步骤1: 检查认证状态...');
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('请先登录');
+                }
+                
+                const userResponse = await fetch(`${API_BASE}/users/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!userResponse.ok) {
+                    throw new Error('认证失败，请重新登录');
+                }
+                results.push('✅ 认证状态正常');
+                
+                // 2. 创建测试笔记
+                results.push('\n🔍 步骤2: 创建测试笔记...');
+                const noteData = {
+                    title: `持久化测试笔记 ${new Date().toLocaleString()}`,
+                    content: '这是一个用于测试数据持久化的笔记。如果您能在刷新页面后看到这个笔记，说明数据持久化功能正常工作。',
+                    category_id: 1,
+                    tags: ['测试', '持久化', '自动化']
+                };
+                
+                const createdNote = await apiRequest('/notes', {
+                    method: 'POST',
+                    body: JSON.stringify(noteData)
+                });
+                results.push(`✅ 笔记创建成功，ID: ${createdNote.id}`);
+                
+                // 3. 验证笔记是否可以获取
+                results.push('\n🔍 步骤3: 验证笔记是否可以获取...');
+                const retrievedNote = await apiRequest(`/notes/${createdNote.id}`);
+                results.push('✅ 笔记获取成功');
+                
+                // 4. 获取笔记列表验证
+                results.push('\n🔍 步骤4: 获取笔记列表验证...');
+                const notesList = await apiRequest('/notes/tree');
+                const foundInList = JSON.stringify(notesList).includes(createdNote.id.toString());
+                if (foundInList) {
+                    results.push('✅ 笔记在列表中找到');
+                } else {
+                    results.push('⚠️ 笔记在列表中未找到');
+                }
+                
+                results.push('\n🎉 数据持久化测试完成！');
+                results.push('💡 提示：现在您可以刷新主应用页面，查看刚创建的笔记是否还在。');
+                
+            } catch (error) {
+                results.push(`❌ 测试失败: ${error.message}`);
+            }
+            
+            resultDiv.textContent = results.join('\n');
+        }
+
+        // 页面加载时检查认证状态
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                checkAuthStatus();
+            }
+        };
+    </script>
+</body>
+</html>
