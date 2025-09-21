@@ -27,12 +27,23 @@ app = FastAPI(
 )
 
 # 配置CORS
+allowed_origins = [
+    "http://localhost:3000",  # 本地开发
+    "http://localhost:5173",  # Vite开发服务器
+    "https://ai-workspace-five.vercel.app",  # Vercel生产环境
+    "https://*.vercel.app",  # Vercel预览环境
+]
+
+# 如果是开发环境，允许所有来源
+if os.getenv("ENVIRONMENT") != "production":
+    allowed_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 允许所有来源
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],  # 允许所有方法
-    allow_headers=["*"],  # 允许所有头部
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # 安全配置
@@ -95,10 +106,11 @@ async def serve_frontend(full_path: str):
     raise HTTPException(status_code=404, detail="File not found")
 
 if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8002))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8002,
-        reload=True
+        port=port,
+        reload=os.getenv("ENVIRONMENT") != "production"
     )
 
