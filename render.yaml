@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: cortex-ai-workspace-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        value: cortex-ai-workspace-jwt-secret-2024
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cortex-ai-db
+          property: connectionString
+      - key: OPENAI_API_KEY
+        sync: false  # 需要手动设置
+
+databases:
+  - name: cortex-ai-db
+    plan: free
+    databaseName: cortex_ai_workspace
+    user: cortex_user
