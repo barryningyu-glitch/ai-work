@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-const TimerDisplay = ({ timeLeft, progress, mode, theme, isRunning }) => {
+const TimerDisplay = ({ timeLeft, progress, mode, theme, isRunning, isMobile = false }) => {
   const [pulseAnimation, setPulseAnimation] = useState(false)
 
   // 格式化时间显示
@@ -25,7 +25,11 @@ const TimerDisplay = ({ timeLeft, progress, mode, theme, isRunning }) => {
   }, [isRunning])
 
   const { minutes, seconds } = formatTime(timeLeft)
-  const circumference = 2 * Math.PI * 120 // 半径120的圆周长
+  
+  // 根据设备类型调整尺寸
+  const radius = isMobile ? 80 : 120
+  const svgSize = isMobile ? 200 : 280
+  const circumference = 2 * Math.PI * radius
   const strokeDashoffset = circumference - (progress / 100) * circumference
 
   // 根据模式确定颜色
@@ -71,8 +75,8 @@ const TimerDisplay = ({ timeLeft, progress, mode, theme, isRunning }) => {
         `}
         style={{
           background: `radial-gradient(circle, ${colors.glow} 0%, transparent 70%)`,
-          width: '320px',
-          height: '320px'
+          width: isMobile ? '240px' : '320px',
+          height: isMobile ? '240px' : '320px'
         }}
       />
 
@@ -80,151 +84,143 @@ const TimerDisplay = ({ timeLeft, progress, mode, theme, isRunning }) => {
       <div className="relative">
         {/* SVG 进度圆环 */}
         <svg
-          width="280"
-          height="280"
+          width={svgSize}
+          height={svgSize}
           className="transform -rotate-90"
-          style={{ filter: `drop-shadow(0 0 20px ${colors.glow})` }}
+          style={{ filter: `drop-shadow(0 0 ${isMobile ? '15px' : '20px'} ${colors.glow})` }}
         >
           {/* 背景圆环 */}
           <circle
-            cx="140"
-            cy="140"
-            r="120"
+            cx={svgSize / 2}
+            cy={svgSize / 2}
+            r={radius}
             stroke="rgba(255, 255, 255, 0.1)"
-            strokeWidth="8"
+            strokeWidth={isMobile ? "6" : "8"}
             fill="none"
           />
           
           {/* 进度圆环 */}
           <circle
-            cx="140"
-            cy="140"
-            r="120"
+            cx={svgSize / 2}
+            cy={svgSize / 2}
+            r={radius}
             stroke={colors.primary}
-            strokeWidth="8"
+            strokeWidth={isMobile ? "6" : "8"}
             fill="none"
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
-            className="transition-all duration-1000 ease-out"
+            className={`transition-all duration-1000 ease-out ${pulseAnimation ? 'opacity-90' : 'opacity-100'}`}
             style={{
-              filter: `drop-shadow(0 0 10px ${colors.primary})`
+              filter: `drop-shadow(0 0 ${isMobile ? '8px' : '12px'} ${colors.primary})`
             }}
           />
-          
+
           {/* 内圈装饰 */}
           <circle
-            cx="140"
-            cy="140"
-            r="100"
+            cx={svgSize / 2}
+            cy={svgSize / 2}
+            r={radius - (isMobile ? 15 : 20)}
             stroke={colors.secondary}
-            strokeWidth="2"
+            strokeWidth="1"
             fill="none"
             opacity="0.3"
-            strokeDasharray="5,5"
-            className={isRunning ? 'animate-spin' : ''}
-            style={{ animationDuration: '20s' }}
           />
         </svg>
 
         {/* 时间显示 */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className={`
-            text-6xl font-mono font-bold tracking-wider transition-all duration-300
-            ${pulseAnimation ? 'scale-105' : 'scale-100'}
-          `}>
-            <span 
-              className="text-white"
-              style={{ 
-                textShadow: `0 0 20px ${colors.primary}, 0 0 40px ${colors.primary}` 
-              }}
-            >
-              {minutes}
-            </span>
-            <span 
-              className={`mx-2 ${isRunning ? 'animate-pulse' : ''}`}
-              style={{ color: colors.primary }}
-            >
-              :
-            </span>
-            <span 
-              className="text-white"
-              style={{ 
-                textShadow: `0 0 20px ${colors.primary}, 0 0 40px ${colors.primary}` 
-              }}
-            >
-              {seconds}
-            </span>
+          <div className={`font-mono font-bold text-white ${isMobile ? 'text-3xl' : 'text-5xl'} tracking-wider`}>
+            <span className="drop-shadow-lg">{minutes}</span>
+            <span className={`mx-1 ${pulseAnimation ? 'opacity-50' : 'opacity-100'} transition-opacity`}>:</span>
+            <span className="drop-shadow-lg">{seconds}</span>
           </div>
           
           {/* 进度百分比 */}
-          <div className="mt-4 text-sm text-muted-foreground font-medium">
-            {Math.round(progress)}% 完成
+          <div className={`mt-2 ${isMobile ? 'text-xs' : 'text-sm'} text-white/70 font-medium`}>
+            {Math.round(progress)}%
           </div>
-          
-          {/* 状态指示器 */}
-          <div className="mt-2 flex items-center gap-2">
-            <div 
-              className={`
-                w-2 h-2 rounded-full transition-all duration-300
-                ${isRunning ? 'animate-pulse' : ''}
-              `}
-              style={{ backgroundColor: colors.primary }}
-            />
-            <span className="text-xs text-muted-foreground">
-              {isRunning ? '专注中' : '已暂停'}
-            </span>
-          </div>
-        </div>
 
-        {/* 装饰性元素 */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* 顶部装饰 */}
-          <div 
-            className="absolute top-4 left-1/2 transform -translate-x-1/2 w-1 h-6 rounded-full"
-            style={{ backgroundColor: colors.primary }}
-          />
-          
-          {/* 底部装饰 */}
-          <div 
-            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-1 h-6 rounded-full"
-            style={{ backgroundColor: colors.primary }}
-          />
-          
-          {/* 左侧装饰 */}
-          <div 
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 w-6 h-1 rounded-full"
-            style={{ backgroundColor: colors.primary }}
-          />
-          
-          {/* 右侧装饰 */}
-          <div 
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-1 rounded-full"
-            style={{ backgroundColor: colors.primary }}
-          />
-        </div>
-
-        {/* 外圈刻度 */}
-        <div className="absolute inset-0 pointer-events-none">
-          {Array.from({ length: 12 }, (_, i) => {
-            const angle = (i * 30) - 90 // 从顶部开始，每30度一个刻度
-            const radian = (angle * Math.PI) / 180
-            const x = 140 + 130 * Math.cos(radian)
-            const y = 140 + 130 * Math.sin(radian)
-            
-            return (
-              <div
-                key={i}
-                className="absolute w-1 h-3 bg-white/20 rounded-full"
-                style={{
-                  left: `${x - 2}px`,
-                  top: `${y - 6}px`,
-                  transform: `rotate(${angle + 90}deg)`
-                }}
+          {/* 运行状态指示器 */}
+          {isRunning && (
+            <div className={`mt-2 flex items-center gap-1 ${isMobile ? 'text-xs' : 'text-sm'} text-white/60`}>
+              <div 
+                className={`w-2 h-2 rounded-full bg-current animate-pulse`}
+                style={{ backgroundColor: colors.primary }}
               />
-            )
-          })}
+              <span>运行中</span>
+            </div>
+          )}
         </div>
+
+        {/* 装饰性光点 */}
+        <div 
+          className={`
+            absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+            ${isMobile ? 'w-3 h-3' : 'w-4 h-4'} rounded-full transition-all duration-1000
+            ${isRunning ? 'opacity-80 scale-110' : 'opacity-40 scale-100'}
+          `}
+          style={{
+            backgroundColor: colors.primary,
+            boxShadow: `0 0 ${isMobile ? '15px' : '20px'} ${colors.primary}`,
+            top: `${isMobile ? '15px' : '20px'}`
+          }}
+        />
+
+        {/* 底部装饰光点 */}
+        <div 
+          className={`
+            absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2
+            ${isMobile ? 'w-2 h-2' : 'w-3 h-3'} rounded-full transition-all duration-1000
+            ${isRunning ? 'opacity-60 scale-105' : 'opacity-30 scale-100'}
+          `}
+          style={{
+            backgroundColor: colors.secondary,
+            boxShadow: `0 0 ${isMobile ? '10px' : '15px'} ${colors.secondary}`,
+            bottom: `${isMobile ? '15px' : '20px'}`
+          }}
+        />
+
+        {/* 左侧装饰光点 */}
+        <div 
+          className={`
+            absolute left-0 top-1/2 transform -translate-x-1/2 -translate-y-1/2
+            ${isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full transition-all duration-1000
+            ${isRunning ? 'opacity-50 scale-110' : 'opacity-25 scale-100'}
+          `}
+          style={{
+            backgroundColor: colors.secondary,
+            boxShadow: `0 0 ${isMobile ? '8px' : '12px'} ${colors.secondary}`,
+            left: `${isMobile ? '15px' : '20px'}`
+          }}
+        />
+
+        {/* 右侧装饰光点 */}
+        <div 
+          className={`
+            absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2
+            ${isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full transition-all duration-1000
+            ${isRunning ? 'opacity-50 scale-110' : 'opacity-25 scale-100'}
+          `}
+          style={{
+            backgroundColor: colors.secondary,
+            boxShadow: `0 0 ${isMobile ? '8px' : '12px'} ${colors.secondary}`,
+            right: `${isMobile ? '15px' : '20px'}`
+          }}
+        />
+
+        {/* 中心发光效果 */}
+        <div 
+          className={`
+            absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+            ${isMobile ? 'w-20 h-20' : 'w-32 h-32'} rounded-full transition-all duration-1000
+            ${isRunning ? 'opacity-20 scale-110' : 'opacity-10 scale-100'}
+          `}
+          style={{
+            background: `radial-gradient(circle, ${colors.primary} 0%, transparent 70%)`,
+            filter: 'blur(20px)'
+          }}
+        />
       </div>
     </div>
   )

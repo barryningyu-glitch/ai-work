@@ -198,10 +198,10 @@ const TodoPage = () => {
     <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* 顶部工具栏 */}
       <div className="eva-panel p-4 m-4 mb-0">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-bold text-primary">智能待办事项</h2>
-            <div className="flex items-center gap-4 text-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-4 gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <h2 className="text-xl lg:text-2xl font-bold text-primary">智能待办事项</h2>
+            <div className="flex flex-wrap items-center gap-2 lg:gap-4 text-xs lg:text-sm">
               <span className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-primary rounded-full"></div>
                 总计: {stats.total}
@@ -227,69 +227,76 @@ const TodoPage = () => {
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowAIParser(true)} className="eva-button">
-              <Brain className="w-4 h-4 mr-2" />
-              AI创建任务
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={() => setShowAIParser(true)} className="eva-button text-sm lg:text-base">
+              <Brain className="w-4 h-4 mr-1 lg:mr-2" />
+              <span className="hidden sm:inline">AI创建任务</span>
+              <span className="sm:hidden">AI创建</span>
             </button>
-            <button onClick={handleNewTask} className="eva-button">
-              <Plus className="w-4 h-4 mr-2" />
-              新建任务
+            <button onClick={handleNewTask} className="eva-button text-sm lg:text-base">
+              <Plus className="w-4 h-4 mr-1 lg:mr-2" />
+              <span className="hidden sm:inline">新建任务</span>
+              <span className="sm:hidden">新建</span>
             </button>
           </div>
         </div>
 
         {/* 搜索和过滤 */}
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+          <div className="relative flex-1 max-w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="搜索任务..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="eva-input pl-10"
+              className="eva-input pl-10 text-sm"
             />
           </div>
           
-          <select
-            value={filterStatus || 'all'}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="eva-input px-3 py-2 rounded-lg"
-          >
-            <option value="all">所有状态</option>
-            <option value="todo">待开始</option>
-            <option value="doing">进行中</option>
-            <option value="done">已完成</option>
-          </select>
-          
-          <select
-            value={filterPriority || 'all'}
-            onChange={(e) => setFilterPriority(e.target.value)}
-            className="eva-input px-3 py-2 rounded-lg"
-          >
-            <option value="all">所有优先级</option>
-            <option value="high">高优先级</option>
-            <option value="medium">中优先级</option>
-            <option value="low">低优先级</option>
-          </select>
+          <div className="flex gap-2 sm:gap-4">
+            <select
+              value={filterStatus || 'all'}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="eva-input px-2 sm:px-3 py-2 rounded-lg text-sm flex-1 sm:flex-none"
+            >
+              <option value="all">所有状态</option>
+              <option value="todo">待开始</option>
+              <option value="doing">进行中</option>
+              <option value="done">已完成</option>
+            </select>
+            
+            <select
+              value={filterPriority || 'all'}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              className="eva-input px-2 sm:px-3 py-2 rounded-lg text-sm flex-1 sm:flex-none"
+            >
+              <option value="all">所有优先级</option>
+              <option value="high">高优先级</option>
+              <option value="medium">中优先级</option>
+              <option value="low">低优先级</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {/* 视图切换和内容 */}
-      <div className="flex-1 p-4 pt-0">
+      <div className="flex-1 p-2 sm:p-4 pt-0">
         <Tabs value={currentView} onValueChange={setCurrentView} className="h-full">
-          <TabsList className="eva-panel mb-4">
-            <TabsTrigger value="kanban" className="flex items-center gap-2">
-              <LayoutGrid className="w-4 h-4" />
-              看板视图
+          <TabsList className="eva-panel mb-2 sm:mb-4 w-full sm:w-auto">
+            <TabsTrigger value="kanban" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-none">
+              <LayoutGrid className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">看板视图</span>
+              <span className="sm:hidden">看板</span>
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              日历视图
+            <TabsTrigger value="calendar" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-none">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">日历视图</span>
+              <span className="sm:hidden">日历</span>
             </TabsTrigger>
-            <TabsTrigger value="list" className="flex items-center gap-2">
-              <List className="w-4 h-4" />
-              列表视图
+            <TabsTrigger value="list" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-none">
+              <List className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">列表视图</span>
+              <span className="sm:hidden">列表</span>
             </TabsTrigger>
           </TabsList>
 

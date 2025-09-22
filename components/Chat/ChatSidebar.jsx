@@ -7,7 +7,8 @@ import {
   Edit3,
   MessageSquare,
   Clock,
-  Bot
+  Bot,
+  X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
@@ -20,7 +21,9 @@ const ChatSidebar = ({
   onDeleteSession, 
   onRenameSession,
   searchTerm,
-  onSearchChange
+  onSearchChange,
+  isMobile = false,
+  onClose
 }) => {
   const [editingSession, setEditingSession] = useState(null)
   const [editTitle, setEditTitle] = useState('')
@@ -86,17 +89,24 @@ const ChatSidebar = ({
   }
 
   return (
-    <div className="w-80 eva-panel border-r border-border flex flex-col h-full">
+    <div className={`${isMobile ? 'w-full h-full' : 'w-80'} eva-panel border-r border-border flex flex-col h-full`}>
       {/* 顶部操作区 */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-lg flex items-center gap-2">
-            <Bot className="w-5 h-5 text-primary" />
+      <div className="p-3 lg:p-4 border-b border-border">
+        <div className="flex items-center justify-between mb-3 lg:mb-4">
+          <h3 className="font-semibold text-base lg:text-lg flex items-center gap-2">
+            <Bot className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
             AI对话
           </h3>
-          <Button onClick={onNewSession} size="sm" className="eva-button">
-            <Plus className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={onNewSession} size="sm" className="eva-button">
+              <Plus className="w-4 h-4" />
+            </Button>
+            {isMobile && onClose && (
+              <Button onClick={onClose} variant="ghost" size="sm">
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* 搜索框 */}
@@ -106,7 +116,7 @@ const ChatSidebar = ({
             placeholder="搜索对话..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="eva-input pl-10"
+            className="eva-input pl-10 text-sm"
           />
         </div>
       </div>
@@ -115,8 +125,8 @@ const ChatSidebar = ({
       <div className="flex-1 overflow-y-auto">
         {filteredSessions.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
-            <MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">
+            <MessageSquare className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 opacity-50" />
+            <p className="text-xs lg:text-sm">
               {searchTerm ? '没有找到匹配的对话' : '还没有对话记录'}
             </p>
             {!searchTerm && (
@@ -124,7 +134,7 @@ const ChatSidebar = ({
                 onClick={onNewSession} 
                 variant="outline" 
                 size="sm" 
-                className="mt-2"
+                className="mt-2 text-xs lg:text-sm"
               >
                 开始新对话
               </Button>
@@ -136,7 +146,7 @@ const ChatSidebar = ({
               <div
                 key={session.id}
                 className={`
-                  group relative p-3 rounded-lg cursor-pointer transition-all mb-2
+                  group relative p-2 lg:p-3 rounded-lg cursor-pointer transition-all mb-2
                   ${currentSession?.id === session.id 
                     ? 'bg-primary/20 border border-primary/30' 
                     : 'hover:bg-accent/50'
@@ -157,32 +167,37 @@ const ChatSidebar = ({
                           if (e.key === 'Enter') saveEdit()
                           if (e.key === 'Escape') cancelEdit()
                         }}
-                        className="eva-input w-full text-sm font-medium"
+                        className="eva-input w-full text-xs lg:text-sm font-medium"
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                       />
                     ) : (
-                      <h4 className="font-medium text-sm truncate mb-1">
+                      <h4 className="font-medium text-xs lg:text-sm truncate mb-1">
                         {session.title}
                       </h4>
                     )}
                     
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1 lg:gap-2 text-xs text-muted-foreground">
                       <Clock className="w-3 h-3" />
                       <span>{formatTime(session.updated_at)}</span>
-                      <span>·</span>
-                      <span>{session.message_count} 条消息</span>
+                      <span className="hidden sm:inline">·</span>
+                      <span className="hidden sm:inline">{session.message_count} 条消息</span>
                     </div>
                     
                     <div className="flex items-center gap-1 mt-1">
-                      <div className="px-1.5 py-0.5 bg-primary/20 text-primary text-xs rounded">
+                      <div className="px-1 lg:px-1.5 py-0.5 bg-primary/20 text-primary text-xs rounded">
                         {getModelDisplayName(session.model)}
                       </div>
+                      {isMobile && (
+                        <span className="text-xs text-muted-foreground">
+                          {session.message_count} 条
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   {/* 操作按钮 */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className={`${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
@@ -216,18 +231,20 @@ const ChatSidebar = ({
       </div>
 
       {/* 底部信息 */}
-      <div className="p-4 border-t border-border">
-        <div className="text-xs text-muted-foreground space-y-1">
-          <div className="flex justify-between">
-            <span>总对话数:</span>
-            <span>{sessions.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>当前会话:</span>
-            <span>{currentSession?.message_count || 0} 条消息</span>
+      {!isMobile && (
+        <div className="p-4 border-t border-border">
+          <div className="text-xs text-muted-foreground space-y-1">
+            <div className="flex justify-between">
+              <span>总对话数:</span>
+              <span>{sessions.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>当前会话:</span>
+              <span>{currentSession?.message_count || 0} 条消息</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

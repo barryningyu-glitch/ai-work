@@ -19,6 +19,7 @@ function App() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [useSciFiLogin, setUseSciFiLogin] = useState(true); // 默认使用科幻登录界面
 
   useEffect(() => {
@@ -294,7 +295,16 @@ function App() {
   return (
     <div className="app matrix-theme" style={{ animation: 'systemBoot 1.5s ease-out' }}>
       <DynamicBackground />
-      <nav className="sidebar" style={{ animation: 'systemBoot 1.8s ease-out 0.3s both' }}>
+      
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="mobile-menu-overlay"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      
+      <nav className={`sidebar ${isMobileMenuOpen ? 'sidebar-mobile-open' : ''}`} style={{ animation: 'systemBoot 1.8s ease-out 0.3s both' }}>
         <div className="sidebar-header">
           <div className="logo">
             <div className="logo-icon">
@@ -307,6 +317,16 @@ function App() {
             </div>
             <div className="logo-text">Barry's Cortex</div>
           </div>
+          
+          {/* Mobile Close Button */}
+          <button 
+            className="mobile-close-btn"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="#00ff88" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
         </div>
 
         <div className="nav-menu">
@@ -413,6 +433,16 @@ function App() {
       <main className="main-content" style={{ animation: 'systemBoot 2s ease-out 0.6s both' }}>
         <header className="top-bar" style={{ animation: 'systemBoot 1.5s ease-out 0.9s both' }}>
           <div className="top-bar-left">
+            {/* Mobile Menu Button */}
+            <button 
+              className="mobile-menu-btn"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M3 12h18M3 6h18M3 18h18" stroke="#00ff88" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+            
             <h2 className="page-title">
               {currentPage === 'dashboard' && '工作台'}
               {currentPage === 'notes' && '智能笔记'}
@@ -425,7 +455,7 @@ function App() {
           <div className="top-bar-right">
             <div className="status-indicator">
               <span className="status-dot online"></span>
-              <span>AI在线</span>
+              <span className="status-text">AI在线</span>
             </div>
             <button className="notification-btn">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">

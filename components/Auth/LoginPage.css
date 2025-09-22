@@ -366,10 +366,28 @@
 }
 
 /* 响应式设计 */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .login-card {
-    margin: 20px;
-    padding: 32px 24px;
+    max-width: 380px;
+    padding: 36px 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    padding: 16px;
+  }
+  
+  .login-card {
+    margin: 0;
+    padding: 28px 20px;
+    max-width: 100%;
+    width: 100%;
+    border-radius: 12px;
+  }
+  
+  .login-header {
+    margin-bottom: 24px;
   }
   
   .logo {
@@ -381,23 +399,23 @@
   }
   
   .logo-text {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
     color: #00ff88;
     text-transform: none;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.2px;
     -webkit-text-stroke: 1px rgba(0, 255, 136, 0.3);
     text-shadow: 
       0 0 0 rgba(0, 255, 136, 0.8),
       0 0 0 rgba(0, 255, 136, 0.6);
     animation: outlineGlow 2s ease-in-out infinite alternate;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    max-width: 150px;
+    max-width: 140px;
   }
   
   .logo.expanded .logo-text {
     opacity: 1;
-    max-width: 150px;
+    max-width: 140px;
     margin-left: 8px;
   }
   
@@ -410,14 +428,60 @@
   
   .login-header h1 {
     font-size: 20px;
+    margin-bottom: 8px;
+  }
+  
+  .login-header p {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  
+  .form-group input {
+    padding: 12px 16px;
+    font-size: 16px; /* 防止iOS缩放 */
+    border-radius: 8px;
+  }
+  
+  .login-button {
+    padding: 14px 24px;
+    font-size: 16px;
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+  
+  .system-info {
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .info-item {
+    font-size: 13px;
   }
 }
 
 /* 超小屏幕适配 */
 @media (max-width: 480px) {
+  .login-container {
+    padding: 12px;
+  }
+  
   .login-card {
-    margin: 10px;
-    padding: 24px 16px;
+    padding: 20px 16px;
+    border-radius: 10px;
+  }
+  
+  .login-header {
+    margin-bottom: 20px;
   }
   
   .logo-icon {
@@ -437,6 +501,65 @@
   
   .login-header h1 {
     font-size: 18px;
+    margin-bottom: 6px;
+  }
+  
+  .login-header p {
+    font-size: 13px;
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .form-group input {
+    padding: 10px 14px;
+    font-size: 16px;
+  }
+  
+  .login-button {
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+  
+  .error-message {
+    font-size: 13px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+  }
+}
+
+/* 横屏模式优化 */
+@media (max-height: 600px) and (orientation: landscape) {
+  .login-container {
+    padding: 8px;
+  }
+  
+  .login-card {
+    padding: 16px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .login-header {
+    margin-bottom: 16px;
+  }
+  
+  .login-header h1 {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  
+  .login-header p {
+    font-size: 12px;
+  }
+  
+  .form-group {
+    margin-bottom: 12px;
+  }
+  
+  .login-footer {
+    margin-top: 12px;
   }
 }
 

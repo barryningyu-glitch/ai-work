@@ -1,0 +1,24 @@
+# Railway 环境变量配置
+# 复制以下变量到 Railway 项目设置中
+
+# 🌍 环境配置
+ENVIRONMENT=production
+
+# 🔐 JWT 安全配置
+SECRET_KEY=your-super-secret-jwt-key-32-characters-long
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# 🤖 OpenAI API 配置
+OPENAI_API_KEY=sk-your-openai-api-key-here
+
+# 📝 注意事项:
+# 1. SECRET_KEY 应该是一个随机的32位字符串
+# 2. OPENAI_API_KEY 需要从 https://platform.openai.com 获取
+# 3. DATABASE_URL 会由 Railway PostgreSQL 服务自动提供
+# 4. PORT 会由 Railway 自动设置
+
+# 🔧 可选配置 (Railway 会自动处理)
+# PORT=8000
+# HOST=0.0.0.0
+# DATABASE_URL=postgresql://... (自动生成)
