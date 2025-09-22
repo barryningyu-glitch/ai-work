@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kimi K2 模型测试 - 在线体验</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .model-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .test-section {
+            padding: 30px;
+        }
+
+        .test-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .test-card:hover {
+            border-color: #4facfe;
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .test-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .test-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .test-description {
+            color: #718096;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .textarea-field {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-box {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 100px;
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-box.success {
+            border-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .result-box.error {
+            border-color: #f56565;
+            background: #fff5f5;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .status-online {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-offline {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online .status-dot {
+            background: #48bb78;
+        }
+
+        .status-offline .status-dot {
+            background: #f56565;
+        }
+
+        .quick-tests {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .quick-test-btn {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .quick-test-btn:hover {
+            border-color: #4facfe;
+            background: #f7fafc;
+            transform: translateY(-1px);
+        }
+
+        .api-config {
+            background: #fff5cd;
+            border: 1px solid #f6ad55;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .api-config h3 {
+            color: #744210;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .api-config p {
+            color: #8b6914;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #f6ad55;
+            border-radius: 6px;
+            background: white;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .config-input:focus {
+            outline: none;
+            border-color: #f6ad55;
+            box-shadow: 0 0 0 2px rgba(246, 173, 85, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .test-section {
+                padding: 20px;
+            }
+
+            .quick-tests {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Kimi K2 模型测试中心</h1>
+            <p>体验最新的Kimi K2人工智能模型</p>
+            <div class="model-badge">模型: kimi-k2-latest</div>
+        </div>
+
+        <div class="test-section">
+            <!-- API配置 -->
+            <div class="api-config">
+                <h3>🔑 API 配置</h3>
+                <p>如果您想使用自己的Kimi API密钥进行测试，请在下方输入。否则将使用演示服务器的默认配置。</p>
+                <input type="password" id="apiKey" class="config-input" placeholder="sk-... (可选)" />
+            </div>
+
+            <!-- 状态指示器 -->
+            <div id="statusIndicator" class="status-indicator status-offline">
+                <div class="status-dot"></div>
+                <span>等待连接测试</span>
+            </div>
+
+            <!-- 基础对话测试 -->
+            <div class="test-card">
+                <div class="test-title">
+                    <div class="test-icon">💬</div>
+                    基础对话测试
+                </div>
+                <div class="test-description">
+                    测试Kimi K2模型的基础对话能力，输入您的问题，体验智能回复。
+                </div>
+                <div class="input-group">
+                    <label class="input-label">您的问题</label>
+                    <textarea id="chatInput" class="input-field textarea-field" placeholder="例如：请介绍一下Kimi K2模型的特点...">你好！请用中文介绍一下你自己，并说明你有什么特色功能？</textarea>
+                </div>
+                <button class="btn" onclick="testChat()">
+                    <span>🚀</span>
+                    开始对话
+                </button>
+                <div id="chatResult" class="result-box"></div>
+            </div>
+
+            <!-- 快速测试 -->
+            <div class="test-card">
+                <div class="test-title">
+                    <div class="test-icon">⚡</div>
+                    快速测试用例
+                </div>
+                <div class="test-description">
+                    点击下面的快速测试按钮，体验不同的AI功能。
+                </div>
+                <div class="quick-tests">
+                    <div class="quick-test-btn" onclick="quickTest('creative')">
+                        <div>🎨</div>
+                        <div>创意写作</div>
+                        <small>测试创意生成能力</small>
+                    </div>
+                    <div class="quick-test-btn" onclick="quickTest('analysis')">
+                        <div>📊</div>
+                        <div>数据分析</div>
+                        <small>测试逻辑分析能力</small>
+                    </div>
+                    <div class="quick-test-btn" onclick="quickTest('translation')">
+                        <div>🌐</div>
+                        <div>翻译功能</div>
+                        <small>测试多语言支持</small>
+                    </div>
+                    <div class="quick-test-btn" onclick="quickTest('code')">
+                        <div>💻</div>
+                        <div>代码生成</div>
+                        <small>测试编程能力</small>
+                    </div>
+                </div>
+                <div id="quickResult" class="result-box"></div>
+            </div>
+
+            <!-- 加载状态 -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <div>正在与Kimi K2通信...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API配置
+        const API_BASE = window.location.origin;
+        let apiKey = '';
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus('offline', '等待连接测试');
+
+            // API密钥变化监听
+            document.getElementById('apiKey').addEventListener('input', function(e) {
+                apiKey = e.target.value;
+            });
+        });
+
+        // 更新状态指示器
+        function updateStatus(status, message) {
+            const indicator = document.getElementById('statusIndicator');
+            indicator.className = `status-indicator status-${status}`;
+            indicator.innerHTML = `
+                <div class="status-dot"></div>
+                <span>${message}</span>
+            `;
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
+
+        // 显示结果
+        function showResult(resultId, content, success = true) {
+            const resultBox = document.getElementById(resultId);
+            resultBox.className = `result-box show ${success ? 'success' : 'error'}`;
+            resultBox.innerHTML = content;
+        }
+
+        // 测试基础对话
+        async function testChat() {
+            const input = document.getElementById('chatInput').value.trim();
+            if (!input) {
+                alert('请输入测试内容');
+                return;
+            }
+
+            showLoading();
+            updateStatus('online', '正在连接Kimi K2...');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/kimi-test/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: input,
+                        model: 'kimi-k2-latest',
+                        api_key: apiKey
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                updateStatus('online', '连接成功 ✓');
+                showResult('chatResult', `
+                    <h4>🤖 Kimi K2 回复:</h4>
+                    <p style="margin: 15px 0; line-height: 1.6;">${data.response}</p>
+                    <div style="font-size: 0.9em; color: #718096; margin-top: 15px;">
+                        <strong>模型:</strong> ${data.model} |
+                        <strong>耗时:</strong> ${data.response_time || 'N/A'}ms |
+                        <strong>Token:</strong> ${data.tokens || 'N/A'}
+                    </div>
+                `, true);
+
+            } catch (error) {
+                console.error('测试失败:', error);
+                updateStatus('offline', '连接失败 ✗');
+                showResult('chatResult', `
+                    <h4>❌ 测试失败</h4>
+                    <p style="color: #e53e3e;">${error.message}</p>
+                    <p style="font-size: 0.9em; color: #718096;">
+                        请确保后端服务正在运行，并且Kimi API密钥配置正确。
+                    </p>
+                `, false);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 快速测试
+        async function quickTest(type) {
+            const prompts = {
+                creative: {
+                    title: '🎨 创意写作测试',
+                    prompt: '请以"未来的城市"为题，写一段100字左右的科幻短文，要有想象力和画面感。'
+                },
+                analysis: {
+                    title: '📊 数据分析测试',
+                    prompt: '分析一下这句话的逻辑："所有的程序员都会编程，小明会编程，所以小明是程序员。"这个推理是否正确？为什么？'
+                },
+                translation: {
+                    title: '🌐 翻译功能测试',
+                    prompt: '请将这句话翻译成英文和日文："人工智能正在改变世界，让我们一起创造更美好的未来。"'
+                },
+                code: {
+                    title: '💻 代码生成测试',
+                    prompt: '请用Python写一个函数，实现斐波那契数列的生成器，要求包含错误处理和文档字符串。'
+                }
+            };
+
+            const test = prompts[type];
+            if (!test) return;
+
+            showLoading();
+            updateStatus('online', '正在执行快速测试...');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/kimi-test/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: test.prompt,
+                        model: 'kimi-k2-latest',
+                        api_key: apiKey
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                updateStatus('online', '快速测试完成 ✓');
+                showResult('quickResult', `
+                    <h4>${test.title}</h4>
+                    <div style="background: #f7fafc; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <strong>测试内容:</strong> ${test.prompt}
+                    </div>
+                    <h5 style="margin: 15px 0 10px 0; color: #2d3748;">🤖 Kimi K2 回复:</h5>
+                    <p style="margin: 10px 0; line-height: 1.6; white-space: pre-wrap;">${data.response}</p>
+                    <div style="font-size: 0.9em; color: #718096; margin-top: 15px;">
+                        <strong>模型:</strong> ${data.model} |
+                        <strong>耗时:</strong> ${data.response_time || 'N/A'}ms
+                    </div>
+                `, true);
+
+            } catch (error) {
+                console.error('快速测试失败:', error);
+                updateStatus('offline', '测试失败 ✗');
+                showResult('quickResult', `
+                    <h4>❌ 快速测试失败</h4>
+                    <p style="color: #e53e3e;">${error.message}</p>
+                `, false);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 回车键支持
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                testChat();
+            }
+        });
+    </script>
+</body>
+</html>

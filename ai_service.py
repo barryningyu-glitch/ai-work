@@ -15,19 +15,20 @@ class AIService:
             print("警告: OPENROUTER_API_KEY环境变量未设置，AI功能将不可用")
             self.openrouter_api_key = "demo_key"  # 设置一个占位符
         
-        # 默认模型配置 - 优先使用GPT-5
-        self.default_ai_model = os.getenv("DEFAULT_AI_MODEL", "openai/gpt-5")
-        self.default_chat_model = os.getenv("DEFAULT_CHAT_MODEL", "openai/gpt-5")
-        
-        # 支持的模型列表 - GPT-5作为首选
+        # 默认模型配置 - 全面切换到Kimi K2
+        self.default_ai_model = os.getenv("DEFAULT_AI_MODEL", "kimi-k2-latest")
+        self.default_chat_model = os.getenv("DEFAULT_CHAT_MODEL", "kimi-k2-latest")
+
+        # 支持的模型列表 - Kimi K2作为首选
         self.supported_models = {
-            "openai/gpt-5": "GPT-5 (推荐)",
+            "kimi-k2-latest": "Kimi K2 (最新版 - 推荐)",
+            "moonshot-v1-8k": "Kimi (Moonshot V1 8K)",
+            "openai/gpt-5": "GPT-5",
             "openai/gpt-4o": "GPT-4o",
             "deepseek/deepseek-chat-v3.1": "DeepSeek Chat V3.1",
             "google/gemini-2.5-flash": "Gemini 2.5 Flash",
             "google/gemini-2.5-pro": "Gemini 2.5 Pro",
-            "anthropic/claude-sonnet-4": "Claude Sonnet 4",
-            "moonshot-v1-8k": "Kimi (Moonshot V1 8K)"
+            "anthropic/claude-sonnet-4": "Claude Sonnet 4"
         }
         
         print(f"AI服务初始化完成 - 默认模型: {self.default_ai_model}")
@@ -44,9 +45,10 @@ class AIService:
         # 检查模型是否支持
         if model not in self.supported_models:
             raise Exception(f"不支持的模型: {model}")
-        
-        if model == "moonshot-v1-8k":
-            return await self._kimi_chat(messages)
+
+        # Kimi模型统一处理
+        if model.startswith("kimi-") or model == "moonshot-v1-8k":
+            return await self._kimi_chat(messages, model)
         else:
             return await self._openrouter_chat(messages, model, stream)
 
@@ -121,21 +123,34 @@ class AIService:
         except Exception as e:
             raise Exception(f"OpenRouter服务错误: {str(e)}")
 
-    async def _kimi_chat(self, messages: List[Dict]) -> Dict:
+    async def _kimi_chat(self, messages: List[Dict], model: str = "kimi-k2-latest") -> Dict:
         """
-        使用Kimi API进行对话
+        使用Kimi API进行对话 - 支持K2模型
         """
         headers = {
             "Authorization": f"Bearer {self.kimi_api_key}",
             "Content-Type": "application/json"
         }
-        
-        data = {
-            "model": "moonshot-v1-8k",
-            "messages": messages,
-            "temperature": 0.7,
-            "max_tokens": 2000
-        }
+
+        # Kimi K2模型配置优化
+        if model == "kimi-k2-latest":
+            data = {
+                "model": "kimi-latest",  # 使用最新的K2模型
+                "messages": messages,
+                "temperature": 0.8,     # K2模型适合更高的温度值
+                "max_tokens": 8000,     # K2支持更长的输出
+                "top_p": 0.95,
+                "frequency_penalty": 0.1,
+                "presence_penalty": 0.1
+            }
+        else:
+            # 兼容旧版Kimi模型
+            data = {
+                "model": model,
+                "messages": messages,
+                "temperature": 0.7,
+                "max_tokens": 2000
+            }
         
         response = requests.post(
             f"{self.kimi_base_url}/chat/completions",
@@ -148,11 +163,12 @@ class AIService:
             raise Exception(f"Kimi API错误: {response.status_code} - {response.text}")
         
         result = response.json()
-        
+
         return {
             "content": result["choices"][0]["message"]["content"],
-            "model": "kimi",
-            "usage": result.get("usage", {})
+            "model": model,
+            "usage": result.get("usage", {}),
+            "finish_reason": result["choices"][0].get("finish_reason", "stop")
         }
 
     async def enhance_text(self, text: str, style: str = "professional") -> str:

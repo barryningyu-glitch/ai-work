@@ -9,7 +9,7 @@ import os
 from dotenv import load_dotenv
 
 from database import get_db, engine, Base
-import notes, tasks, chat, chat_test, pomodoro, auth, ai, users
+import notes, tasks, chat, chat_test, pomodoro, auth, ai, users, kimi_test
 from models import User, Category, Note, Task, ChatSession, PomodoroLog
 from auth import create_super_user
 
@@ -61,6 +61,7 @@ app.include_router(tasks.router, prefix="/api/tasks", tags=["任务"])
 app.include_router(chat_test.router, prefix="/api/chat", tags=["对话"])
 app.include_router(pomodoro.router, prefix="/api/pomodoro", tags=["番茄钟"])
 app.include_router(ai.router, prefix="/api/ai", tags=["AI服务"])
+app.include_router(kimi_test.router, tags=["Kimi测试"])
 
 @app.on_event("startup")
 async def startup_event():
@@ -98,7 +99,17 @@ async def serve_frontend(full_path: str):
     static_file_path = f"static/{full_path}"
     if os.path.exists(static_file_path) and os.path.isfile(static_file_path):
         return FileResponse(static_file_path)
-    
+
+    # 直接服务HTML文件（Kimi测试文件）
+    html_files = {
+        "test-kimi-k2.html": "test-kimi-k2.html",
+        "kimi-test-simple.html": "kimi-test-simple.html",
+        "kimi-k2-test-standalone.html": "kimi-k2-test-standalone.html"
+    }
+
+    if full_path in html_files and os.path.exists(html_files[full_path]):
+        return FileResponse(html_files[full_path])
+
     # 默认返回index.html（用于SPA路由）
     if os.path.exists("static/index.html"):
         return FileResponse("static/index.html")
